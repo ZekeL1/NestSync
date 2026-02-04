@@ -22,17 +22,10 @@ NestSync is designed with a **multi-tab interface** to provide a versatile exper
 * **Backend:** [Node.js](https://nodejs.org/)
 * **Communication:** [Socket.io](https://socket.io/) (WebSockets for real-time synchronization)
 * **P2P Streaming:** WebRTC (for future camera integration)
-* **Project Management:** Jira link:https://ece651-group2.atlassian.net/jira/software/projects/NES/boards/34/backlog
+* **Project Management:** Jira
+
+    link:https://ece651-group2.atlassian.net/jira/software/projects/NES/boards/34/backlog
 
 ---
 
-##  Project Structure (Monorepo)
-
-```text
-NestSync/
-├── client/           # Electron frontend application
-├── server/           # Node.js backend synchronization server
-├── docs/             # Project abstract, design diagrams, and PDFs
-├── .gitignore        # Git exclusion rules
-├── LICENSE           # MIT License
-└── README.md         # Project overview and documentation
+##  Project Structure (todo)
