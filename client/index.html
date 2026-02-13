@@ -5,86 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NestSync</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .video-container-fixed { position: relative; width: 100%; height: 450px; background: #1e272e; border-radius: 8px; overflow: hidden; }
+        #youtube-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+        #video-empty-state { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; color: #636e72; }
+    </style>
 </head>
 <body>
     <div class="app-container">
         <nav class="sidebar">
-            <div class="logo">
-                <i class="fa-solid fa-house-chimney-user"></i>
-                <span>NestSync</span>
-            </div>
-            
+            <div class="logo"><i class="fa-solid fa-house-chimney-user"></i><span>NestSync</span></div>
             <ul class="nav-links">
-                <li class="active" data-tab="cinema">
-                    <i class="fa-solid fa-film"></i>
-                    <span>Sync Cinema</span>
-                </li>
-                <li data-tab="games">
-                    <i class="fa-solid fa-gamepad"></i>
-                    <span>Mini-Games</span>
-                </li>
-                <li data-tab="tales">
-                    <i class="fa-solid fa-book-open-reader"></i>
-                    <span>Fairy Tales</span>
-                </li>
+                <li class="active" data-tab="cinema"><i class="fa-solid fa-film"></i><span>Sync Cinema</span></li>
+                <li data-tab="games"><i class="fa-solid fa-gamepad"></i><span>Mini-Games</span></li>
+                <li data-tab="tales"><i class="fa-solid fa-book-open-reader"></i><span>Fairy Tales</span></li>
             </ul>
-
-            <div class="user-profile">
-                <div class="avatar">U</div>
-                <span>User: Parent/Child</span>
-            </div>
+            <div class="user-profile"><div class="avatar">B</div><span>User: Bruce Yu</span></div>
         </nav>
 
-        <main class="content-area">
-            <div id="cinema" class="tab-content active-content">
-                <div class="header">
-                    <h1>Sync Cinema</h1>
-                    <p>Watch together, even when apart.</p>
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div class="status-indicator"><span id="status-badge" class="badge badge-offline">Offline</span><span id="create-feedback" class="feedback-text"></span></div>
+                <div class="connection-actions">
+                    <button id="btn-create" class="btn-modern btn-primary"><i class="fa-solid fa-plus"></i> Create</button>
+                    <div class="divider-vertical"></div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-hashtag input-icon"></i>
+                        <input type="text" id="input-room-id" placeholder="Room ID" maxlength="4">
+                        <button id="btn-join" class="btn-modern btn-secondary">Join</button>
+                    </div>
                 </div>
-                <div class="video-placeholder">
-                    <div class="screen">
-                        <i class="fa-regular fa-circle-play"></i>
-                        <p>Waiting for URL or Stream...</p>
+            </header>
+
+            <main class="content-area">
+                <div id="cinema" class="tab-content active-content">
+                    <div class="header"><h1>Sync Cinema</h1><p>Watch together, even when apart.</p></div>
+                    <div class="video-placeholder">
+                        <div class="video-container-fixed">
+                            <div id="youtube-player"></div>
+                            <div id="video-empty-state"><i class="fa-brands fa-youtube" style="font-size: 4rem; color: #ff7675;"></i><p>Waiting for YouTube URL...</p></div>
                         </div>
-                    <div class="controls">
-                        <button class="btn-primary">Load URL</button>
-                        <button class="btn-secondary">Invite Family</button>
+                        <div class="controls" style="display:flex; gap:10px; margin-top:15px;">
+                            <input type="text" id="input-video-url" placeholder="Paste YouTube URL..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd;">
+                            <button id="btn-load-video" class="btn-primary" style="padding:10px 20px; border-radius:8px;">Load</button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="games" class="tab-content">
-                <div class="header">
-                    <h1>Mini-Games</h1>
-                    <p>Fun local interactions.</p>
-                </div>
-                <div class="cards-grid">
-                    <div class="card">
-                        <i class="fa-solid fa-puzzle-piece"></i>
-                        <h3>Puzzle</h3>
+                <div id="tales" class="tab-content">
+                    <div class="header"><h1>Fairy Tales</h1><p>AI-generated bilingual stories for Bruce.</p></div>
+                    <div class="ai-input-group" style="display:flex; gap:10px; margin:20px 0;">
+                        <input type="text" id="ai-prompt" placeholder="Enter a story theme..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd;">
+                        <button id="btn-magic-create" class="btn-primary" style="padding:10px 20px; border-radius:8px;">Magic Create</button>
                     </div>
-                    <div class="card">
-                        <i class="fa-solid fa-pencil"></i>
-                        <h3>Drawing</h3>
+                    <div id="book-reader" style="display:none; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+                        <img id="story-img" src="" style="width:100%; border-radius:8px; margin-bottom:15px;">
+                        <h2 id="story-title" style="margin-bottom:10px;"></h2>
+                        <div class="story-text">
+                            <p id="story-en" style="font-size:1.1rem; color:#2d3436; font-family:serif;"></p>
+                            <p id="story-zh" style="font-size:0.9rem; color:#636e72; margin-top:10px; border-left:3px solid #ff7675; padding-left:12px;"></p>
+                        </div>
+                        <div class="nav-btns" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+                            <button id="prev-page" class="btn-modern"><i class="fa-solid fa-chevron-left"></i></button>
+                            <span id="page-num" style="font-weight:bold;">1 / 3</span>
+                            <button id="next-page" class="btn-modern"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="tales" class="tab-content">
-                <div class="header">
-                    <h1>Fairy Tales</h1>
-                    <p>Read and listen to stories.</p>
+                <div id="games" class="tab-content"><h1>Mini-Games Coming Soon</h1></div>
+            </main>
+        </div>
+
+        <aside class="camera-panel">
+            <div class="panel-header"><i class="fa-solid fa-video"></i><h3>Family Presence</h3></div>
+            <div class="camera-container">
+                <div class="cam-box remote-cam">
+                    <video id="remote-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+                    <div id="remote-placeholder" class="cam-placeholder"><i class="fa-solid fa-user-astronaut"></i><p>Waiting...</p></div>
+                    <div class="cam-label">Remote</div>
                 </div>
-                <div class="story-list">
-                    <div class="story-item">The Little Prince</div>
-                    <div class="story-item">Cinderella</div>
-                    <div class="story-item">Peter Pan</div>
+                <div class="cam-box local-cam">
+                    <video id="local-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
+                    <div id="local-placeholder" class="cam-placeholder"><i class="fa-solid fa-user"></i><p>Off</p></div>
+                    <div class="cam-label">You</div>
+                    <div class="cam-controls">
+                        <button id="btn-toggle-mic" class="icon-btn"><i class="fa-solid fa-microphone"></i></button>
+                        <button id="btn-toggle-cam" class="icon-btn"><i class="fa-solid fa-video"></i></button>
+                    </div>
                 </div>
             </div>
-        </main>
+        </aside>
     </div>
-
+    <script src="/socket.io/socket.io.js"></script>
     <script src="renderer.js"></script>
 </body>
 </html>
