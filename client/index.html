@@ -1,34 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NestSync</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="app-container">
         <nav class="sidebar">
-            <div class="logo">NestSync</div>
+            <div class="logo">
+                <i class="fa-solid fa-house-chimney-user"></i>
+                <span>NestSync</span>
+            </div>
+            
             <ul class="nav-links">
-                <li class="nav-item active" data-target="cinema">Sync Cinema</li>
-                <li class="nav-item" data-target="games">Mini-Games</li>
-                <li class="nav-item" data-target="tales">Fairy Tales</li>
+                <li class="active" data-tab="cinema">
+                    <i class="fa-solid fa-film"></i>
+                    <span>Sync Cinema</span>
+                </li>
+                <li data-tab="games">
+                    <i class="fa-solid fa-gamepad"></i>
+                    <span>Mini-Games</span>
+                </li>
+                <li data-tab="tales">
+                    <i class="fa-solid fa-book-open-reader"></i>
+                    <span>Fairy Tales</span>
+                </li>
             </ul>
+
+            <div class="user-profile">
+                <div class="avatar">U</div>
+                <span>User: Parent/Child</span>
+            </div>
         </nav>
 
-        <main class="content">
-            <div id="cinema" class="tab-content active">
-                <h1>Sync Cinema</h1>
-                <p>Enter URL to watch together...</p>
+        <main class="content-area">
+            <div id="cinema" class="tab-content active-content">
+                <div class="header">
+                    <h1>Sync Cinema</h1>
+                    <p>Watch together, even when apart.</p>
+                </div>
+                <div class="video-placeholder">
+                    <div class="screen">
+                        <i class="fa-regular fa-circle-play"></i>
+                        <p>Waiting for URL or Stream...</p>
+                        </div>
+                    <div class="controls">
+                        <button class="btn-primary">Load URL</button>
+                        <button class="btn-secondary">Invite Family</button>
+                    </div>
+                </div>
             </div>
+
             <div id="games" class="tab-content">
-                <h1>Mini-Games</h1>
-                <p>Loading games...</p>
+                <div class="header">
+                    <h1>Mini-Games</h1>
+                    <p>Fun local interactions.</p>
+                </div>
+                <div class="cards-grid">
+                    <div class="card">
+                        <i class="fa-solid fa-puzzle-piece"></i>
+                        <h3>Puzzle</h3>
+                    </div>
+                    <div class="card">
+                        <i class="fa-solid fa-pencil"></i>
+                        <h3>Drawing</h3>
+                    </div>
+                </div>
             </div>
+
             <div id="tales" class="tab-content">
-                <h1>Fairy Tales</h1>
-                <p>Read story books...</p>
+                <div class="header">
+                    <h1>Fairy Tales</h1>
+                    <p>Read and listen to stories.</p>
+                </div>
+                <div class="story-list">
+                    <div class="story-item">The Little Prince</div>
+                    <div class="story-item">Cinderella</div>
+                    <div class="story-item">Peter Pan</div>
+                </div>
             </div>
         </main>
     </div>
+
     <script src="renderer.js"></script>
 </body>
 </html>
