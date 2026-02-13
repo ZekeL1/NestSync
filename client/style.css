@@ -1,34 +1,157 @@
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+/* =========================================
+   1. Base Variables & Reset (基础变量与重置)
+   ========================================= */
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --bg-color: #f8f9fa;
+    --surface-color: #ffffff;
+    --text-main: #2d3436;
+    --text-muted: #b2bec3;
+    --border-color: #edf2f7;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+    --radius: 14px;
+}
 
-.container { display: flex; height: 100vh; width: 100vw; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
-/* 侧边栏样式 */
+body { background-color: var(--bg-color); color: var(--text-main); overflow: hidden; height: 100vh; width: 100vw; }
+
+/* 核心三栏布局 (Core 3-Column Layout) */
+.app-container { display: flex; height: 100%; width: 100%; }
+
+/* =========================================
+   2. Sidebar (左侧导航)
+   ========================================= */
 .sidebar {
-    width: 250px;
-    background-color: #2c3e50;
-    color: white;
-    padding: 20px 0;
+    width: 240px;
+    background-color: var(--surface-color);
+    display: flex; flex-direction: column; padding: 25px 20px;
+    border-right: 1px solid var(--border-color);
+    z-index: 10;
+}
+.logo { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 800; color: var(--primary-color); margin-bottom: 40px; }
+.nav-links { list-style: none; flex: 1; }
+.nav-links li { display: flex; align-items: center; gap: 15px; padding: 12px 16px; margin-bottom: 8px; border-radius: 10px; cursor: pointer; transition: 0.2s; color: #636e72; font-weight: 600; }
+.nav-links li:hover { background-color: #f1f2f6; color: var(--primary-color); }
+.nav-links li.active { background-color: var(--primary-color); color: white; box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25); }
+.user-profile { display: flex; align-items: center; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border-color); color: #636e72; font-size: 0.9rem; font-weight: 500; }
+.avatar { width: 36px; height: 36px; background-color: var(--secondary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+
+/* =========================================
+   3. Middle Workspace & Topbar (中间工作区与顶部栏)
+   ========================================= */
+.main-wrapper { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-color); }
+
+.topbar {
+    height: 70px;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 30px;
 }
 
-.logo { font-size: 24px; font-weight: bold; text-align: center; margin-bottom: 30px; color: #3498db; }
+.status-indicator { display: flex; align-items: center; gap: 15px; }
+.feedback-text { font-size: 0.9rem; color: var(--primary-color); font-weight: 600; }
 
-.nav-item {
-    padding: 15px 25px;
-    cursor: pointer;
-    transition: 0.3s;
-    list-style: none;
+.connection-actions { display: flex; align-items: center; gap: 15px; }
+.divider-vertical { width: 1px; height: 24px; background-color: var(--border-color); }
+
+.input-group { display: flex; align-items: center; background: #f8f9fa; border-radius: 8px; padding: 4px; border: 1px solid var(--border-color); }
+.input-icon { color: var(--text-muted); padding-left: 10px; }
+.input-group input { border: none; background: transparent; padding: 8px 10px; width: 100px; font-weight: 600; outline: none; color: var(--text-main); }
+.input-group input:focus { width: 120px; transition: 0.3s ease; } /* Focus animation */
+
+/* 徽章与按钮 */
+.badge { padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
+.badge-offline { background-color: #ffeaa7; color: #d35400; }
+.badge-online { background-color: #55efc4; color: #00b894; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(85, 239, 196, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(85, 239, 196, 0); } 100% { box-shadow: 0 0 0 0 rgba(85, 239, 196, 0); } }
+
+.btn-modern { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.btn-modern:active { transform: scale(0.95); }
+.btn-primary { background-color: var(--primary-color); color: white; }
+.btn-primary:hover { background-color: #5849be; }
+.btn-secondary { background-color: white; color: var(--text-main); border: 1px solid var(--border-color); }
+.btn-secondary:hover { background-color: #f1f2f6; }
+
+/* 内容区 */
+.content-area { flex: 1; padding: 30px; overflow-y: auto; }
+.tab-content { display: none; animation: fadeIn 0.3s ease; }
+.tab-content.active-content { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.header h1 { font-size: 2rem; margin-bottom: 5px; }
+.header p { color: var(--text-muted); margin-bottom: 25px; }
+
+/* Tab 内容占位 */
+.video-placeholder { background: var(--surface-color); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); height: 500px; display: flex; flex-direction: column; }
+.screen { flex: 1; background-color: #1e272e; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #636e72; margin-bottom: 20px; }
+.screen i { font-size: 4rem; margin-bottom: 10px; color: #2d3436; }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+.card { background: var(--surface-color); padding: 30px; border-radius: var(--radius); text-align: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: 0.2s; }
+.card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); border-bottom: 3px solid var(--primary-color); }
+.card i { font-size: 2.5rem; color: var(--secondary-color); margin-bottom: 15px; }
+.story-list { display: flex; flex-direction: column; gap: 10px; }
+.story-item { background: var(--surface-color); padding: 18px 20px; border-radius: var(--radius); display: flex; justify-content: space-between; cursor: pointer; box-shadow: var(--shadow-sm); }
+.story-item:hover { background-color: #f8f9fa; transform: translateX(5px); transition: 0.2s; }
+
+/* =========================================
+   4. Right Camera Panel (右侧常驻摄像头面板)
+   ========================================= */
+.camera-panel {
+    width: 280px;
+    background-color: var(--surface-color);
+    border-left: 1px solid var(--border-color);
+    display: flex; flex-direction: column;
+    padding: 20px;
+    z-index: 10;
 }
 
-.nav-item:hover { background-color: #34495e; }
+.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; color: var(--text-main); font-weight: 700; font-size: 1.1rem; }
+.panel-header i { color: #e17055; /* 醒目的红色/橙色 */ }
 
-/* 响应 AC：高亮视觉反馈 */
-.nav-item.active {
-    background-color: #3498db;
-    border-left: 5px solid #ecf0f1;
+.camera-container { display: flex; flex-direction: column; gap: 20px; flex: 1; }
+
+.cam-box {
+    background-color: #2d3436;
+    border-radius: var(--radius);
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* 内容区样式 */
-.content { flex: 1; padding: 40px; background-color: #ecf0f1; }
+/* 对方的画面更大一些 (Remote camera slightly larger/focused) */
+.remote-cam { height: 260px; }
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
+.cam-placeholder { text-align: center; color: #636e72; }
+.cam-placeholder i { font-size: 3rem; margin-bottom: 10px; }
+.cam-placeholder p { font-size: 0.85rem; font-weight: 600; }
+
+.cam-label {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: rgba(0,0,0,0.6); color: white;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 0.75rem; font-weight: bold;
+    backdrop-filter: blur(4px);
+}
+
+/* 本地摄像头控制按钮 (Local Camera Controls) */
+.cam-controls {
+    position: absolute;
+    bottom: 10px;
+    display: flex; gap: 10px;
+}
+
+.icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%; border: none;
+    background: rgba(255, 255, 255, 0.2); color: white;
+    cursor: pointer; backdrop-filter: blur(4px);
+    transition: 0.2s;
+}
+.icon-btn:hover { background: rgba(255, 255, 255, 0.4); transform: scale(1.1); }
