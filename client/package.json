@@ -1,14 +1,19 @@
 {
-  "name": "client",
+  "name": "nestsync",
   "version": "1.0.0",
-  "description": "",
+  "description": "A remote presence tool for families",
   "main": "main.js",
   "scripts": {
     "start": "electron ."
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "Electron",
+    "NestSync",
+    "ECE651"
+  ],
+  "author": "Group 2",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^32.0.0"
-  }}
+    "electron": "^28.0.0"
+  }
+}
