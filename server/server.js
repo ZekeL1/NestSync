@@ -13,7 +13,7 @@ io.on('connection', (socket) => {
     socket.on('create-room', () => {
         const roomId = Math.floor(1000 + Math.random() * 9000).toString();
         socket.join(roomId);
-        console.log(`User ${socket.id} creates and joins the room: ${roomId}`);
+        console.log(`User ${socket.id} creates the room: ${roomId}`);
         //emit message to front end
         socket.emit('room-created', roomId);
     })
