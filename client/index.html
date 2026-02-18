@@ -4,100 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NestSync</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        .video-container-fixed { position: relative; width: 100%; height: 450px; background: #1e272e; border-radius: 8px; overflow: hidden; }
-        #youtube-player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
-        #video-empty-state { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; color: #636e72; }
-    </style>
+    <style> #youtube-player { width: 100%; height: 100%; } </style>
 </head>
 <body>
-    <div class="app-container">
-        <nav class="sidebar">
-            <div class="logo"><i class="fa-solid fa-house-chimney-user"></i><span>NestSync</span></div>
-            <ul class="nav-links">
-                <li class="active" data-tab="cinema"><i class="fa-solid fa-film"></i><span>Sync Cinema</span></li>
-                <li data-tab="games"><i class="fa-solid fa-gamepad"></i><span>Mini-Games</span></li>
-                <li data-tab="tales"><i class="fa-solid fa-book-open-reader"></i><span>Fairy Tales</span></li>
-            </ul>
-            <div class="user-profile"><div class="avatar">B</div><span>User: Bruce Yu</span></div>
-        </nav>
 
-        <div class="main-wrapper">
-            <header class="topbar">
-                <div class="status-indicator"><span id="status-badge" class="badge badge-offline">Offline</span><span id="create-feedback" class="feedback-text"></span></div>
-                <div class="connection-actions">
-                    <button id="btn-create" class="btn-modern btn-primary"><i class="fa-solid fa-plus"></i> Create</button>
-                    <div class="divider-vertical"></div>
-                    <div class="input-group">
-                        <i class="fa-solid fa-hashtag input-icon"></i>
-                        <input type="text" id="input-room-id" placeholder="Room ID" maxlength="4">
-                        <button id="btn-join" class="btn-modern btn-secondary">Join</button>
-                    </div>
+    <div id="toast-container"></div>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-box">
+            <div style="font-size: 3.5rem; color: #6c5ce7; margin-bottom: 20px;"><i class="fa-solid fa-house-chimney-user"></i></div>
+            <h2 id="auth-title" style="margin-bottom: 8px; font-weight:800;">Welcome Home</h2>
+            <p id="auth-subtitle" style="color:#636e72; margin-bottom: 30px; font-weight:500;">Connect with your family.</p>
+
+            <form id="login-form">
+                <input type="text" id="login-username" class="auth-input" placeholder="Username" required>
+                <input type="password" id="login-password" class="auth-input" placeholder="Password" required>
+                <button type="submit" class="btn-full">Log In</button>
+                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                    No account? <a href="#" id="show-register" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Sign Up</a>
                 </div>
-            </header>
+                <div id="login-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
+            </form>
 
-            <main class="content-area">
-                <div id="cinema" class="tab-content active-content">
-                    <div class="header"><h1>Sync Cinema</h1><p>Watch together, even when apart.</p></div>
-                    <div class="video-placeholder">
-                        <div class="video-container-fixed">
-                            <div id="youtube-player"></div>
-                            <div id="video-empty-state"><i class="fa-brands fa-youtube" style="font-size: 4rem; color: #ff7675;"></i><p>Waiting for YouTube URL...</p></div>
-                        </div>
-                        <div class="controls" style="display:flex; gap:10px; margin-top:15px;">
-                            <input type="text" id="input-video-url" placeholder="Paste YouTube URL..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd;">
-                            <button id="btn-load-video" class="btn-primary" style="padding:10px 20px; border-radius:8px;">Load</button>
-                        </div>
-                    </div>
+            <form id="register-form" style="display:none;">
+                <input type="text" id="reg-username" class="auth-input" placeholder="Username" required>
+                <input type="email" id="reg-email" class="auth-input" placeholder="Email" required>
+                <input type="text" id="reg-nickname" class="auth-input" placeholder="Nickname (e.g. Dad)" required>
+                <input type="password" id="reg-password" class="auth-input" placeholder="Password" required>
+                
+                <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <label style="flex:1; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                        <input type="radio" name="role" value="parent" checked> <strong>Parent</strong>
+                    </label>
+                    <label style="flex:1; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                        <input type="radio" name="role" value="child"> <strong>Child</strong>
+                    </label>
                 </div>
 
-                <div id="tales" class="tab-content">
-                    <div class="header"><h1>Fairy Tales</h1><p>AI-generated bilingual stories for Bruce.</p></div>
-                    <div class="ai-input-group" style="display:flex; gap:10px; margin:20px 0;">
-                        <input type="text" id="ai-prompt" placeholder="Enter a story theme..." style="flex:1; padding:12px; border-radius:8px; border:1px solid #ddd;">
-                        <button id="btn-magic-create" class="btn-primary" style="padding:10px 20px; border-radius:8px;">Magic Create</button>
-                    </div>
-                    <div id="book-reader" style="display:none; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
-                        <img id="story-img" src="" style="width:100%; border-radius:8px; margin-bottom:15px;">
-                        <h2 id="story-title" style="margin-bottom:10px;"></h2>
-                        <div class="story-text">
-                            <p id="story-en" style="font-size:1.1rem; color:#2d3436; font-family:serif;"></p>
-                            <p id="story-zh" style="font-size:0.9rem; color:#636e72; margin-top:10px; border-left:3px solid #ff7675; padding-left:12px;"></p>
-                        </div>
-                        <div class="nav-btns" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
-                            <button id="prev-page" class="btn-modern"><i class="fa-solid fa-chevron-left"></i></button>
-                            <span id="page-num" style="font-weight:bold;">1 / 3</span>
-                            <button id="next-page" class="btn-modern"><i class="fa-solid fa-chevron-right"></i></button>
-                        </div>
-                    </div>
+                <button type="submit" class="btn-full">Create Account</button>
+                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                    Has account? <a href="#" id="show-login" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
                 </div>
-
-                <div id="games" class="tab-content"><h1>Mini-Games Coming Soon</h1></div>
-            </main>
+                <div id="reg-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
+            </form>
         </div>
+    </div>
 
-        <aside class="camera-panel">
-            <div class="panel-header"><i class="fa-solid fa-video"></i><h3>Family Presence</h3></div>
-            <div class="camera-container">
-                <div class="cam-box remote-cam">
-                    <video id="remote-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
-                    <div id="remote-placeholder" class="cam-placeholder"><i class="fa-solid fa-user-astronaut"></i><p>Waiting...</p></div>
-                    <div class="cam-label">Remote</div>
-                </div>
-                <div class="cam-box local-cam">
-                    <video id="local-video" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover;"></video>
-                    <div id="local-placeholder" class="cam-placeholder"><i class="fa-solid fa-user"></i><p>Off</p></div>
-                    <div class="cam-label">You</div>
-                    <div class="cam-controls">
-                        <button id="btn-toggle-mic" class="icon-btn"><i class="fa-solid fa-microphone"></i></button>
-                        <button id="btn-toggle-cam" class="icon-btn"><i class="fa-solid fa-video"></i></button>
+    <nav class="sidebar glass-panel">
+        <div class="titlebar-safe-area"></div>
+        <div class="logo"><i class="fa-solid fa-bolt"></i> NestSync</div>
+        <ul class="nav-links">
+            <li class="active" data-tab="cinema"><i class="fa-solid fa-film"></i> Cinema</li>
+            <li data-tab="games"><i class="fa-solid fa-gamepad"></i> Arcade</li>
+            <li data-tab="tales"><i class="fa-solid fa-book-open"></i> Tales</li>
+        </ul>
+        <div class="user-card">
+            <div class="avatar" id="current-user-avatar"><i class="fa-solid fa-user"></i></div>
+            <div class="user-info">
+                <span class="u-name" id="current-user-name">Guest</span>
+                <span class="u-role" id="current-user-role"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-wrapper">
+        <header class="topbar glass-panel">
+            <div class="status-pill offline" id="status-badge">Offline</div>
+            
+            <div class="room-controls">
+                <input type="text" id="input-room-id" class="input-room" placeholder="Room ID" maxlength="4">
+                <button id="btn-join" class="btn-icon" title="Join"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                <button id="btn-create" class="btn-primary"><i class="fa-solid fa-plus"></i> New Room</button>
+            </div>
+        </header>
+
+        <main class="content-area glass-panel">
+            <div id="cinema" class="tab-content active-content">
+                <div class="cinema-container">
+                    <div id="youtube-player"></div>
+                    <div id="video-empty-state" class="empty-state">
+                        <i class="fa-brands fa-youtube"></i>
+                        <p>Waiting for video...</p>
                     </div>
+                </div>
+
+                <div class="url-input-wrapper" id="url-control-panel">
+                    <input type="text" id="input-video-url" placeholder="Paste YouTube link here...">
+                    <button id="btn-load-video" class="btn-circle"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
-        </aside>
+            
+            <div id="games" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Games Area</h1></div></div>
+            <div id="tales" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Tales Area</h1></div></div>
+        </main>
     </div>
+
+    <aside class="camera-panel glass-panel">
+        <div class="panel-header">Family Link</div>
+        
+        <div class="cam-wrapper">
+            <div class="cam-card remote-cam">
+                <video id="remote-video" autoplay playsinline></video>
+                <div class="cam-tag">REMOTE</div>
+            </div>
+            <div class="cam-card local-cam">
+                <video id="local-video" autoplay playsinline muted></video>
+                <div class="cam-tag">YOU</div>
+                <div class="local-controls" id="cam-controls">
+                    <button id="btn-toggle-mic" class="icon-btn-sm"><i class="fa-solid fa-microphone"></i></button>
+                    <button id="btn-toggle-cam" class="icon-btn-sm"><i class="fa-solid fa-video"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-wrapper">
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-msg system"><span>Welcome to chat!</span></div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Say something...">
+                <button id="btn-send-chat"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </aside>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="renderer.js"></script>
 </body>
