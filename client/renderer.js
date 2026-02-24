@@ -235,3 +235,96 @@ socket.on('webrtc-answer', async (answer) => { if (peerConnection) await peerCon
 socket.on('webrtc-ice-candidate', async (candidate) => { if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); });
 
 startCamera();
+
+// --- 9. Tales (local only: story list + reader, no sync) ---
+const TALES = {
+    cinderella: {
+        title: 'Cinderella',
+        pages: [
+            { text: 'Once upon a time, there lived a kind girl named Cinderella. Her stepmother and stepsisters were very mean and made her work all day in the kitchen.', image: 'images/tales/cinderella-1.png' },
+            { text: 'One day the King invited all the young ladies to a grand ball. Cinderella had no fine dress, but her fairy godmother appeared and turned a pumpkin into a coach and gave her a beautiful gown.', image: 'images/tales/cinderella-2.png' },
+            { text: 'At the ball, the Prince danced only with Cinderella. At midnight she had to run away and lost one glass slipper. The Prince searched the kingdom to find the girl whose foot fit the slipper.', image: 'images/tales/cinderella-3.png' },
+            { text: 'When the Prince came to Cinderella\'s house, the slipper fit her perfectly. They were married and lived happily ever after.', image: 'images/tales/cinderella-4.png' }
+        ]
+    },
+    peterpan: {
+        title: 'Peter Pan',
+        pages: [
+            { text: 'Peter Pan is a boy who never grows up. He lives in Neverland with the Lost Boys, fairies, and pirates. One night he flew to the Darling family\'s nursery.', image: 'images/tales/peterpan-1.png' },
+            { text: 'Peter taught Wendy, John, and Michael to fly with a little fairy dust and happy thoughts. Together they flew over London to Neverland.', image: 'images/tales/peterpan-2.png' },
+            { text: 'In Neverland they met the Lost Boys and had many adventures. But the pirate Captain Hook wanted to defeat Peter Pan and caused much trouble.', image: 'images/tales/peterpan-3.png' },
+            { text: 'In the end, Peter and the children beat Captain Hook. Wendy and her brothers flew home. Peter stayed in Neverland forever, young and free.', image: 'images/tales/peterpan-4.png' }
+        ]
+    },
+    littlered: {
+        title: 'Little Red Riding Hood',
+        pages: [
+            { text: 'Little Red Riding Hood lived with her mother near the woods. One day her mother asked her to take a basket of food to her sick grandmother on the other side of the forest.', image: 'images/tales/littlered-1.png' },
+            { text: 'On the path she met a wolf. The wolf asked where she was going. She told him about her grandmother. The wolf ran ahead to the cottage and pretended to be the grandmother.', image: 'images/tales/littlered-2.png' },
+            { text: 'When Little Red arrived, she noticed the wolf\'s big eyes and ears. "What big teeth you have!" she said. The wolf jumped up, but a woodcutter heard the noise and came to save her.', image: 'images/tales/littlered-3.png' },
+            { text: 'The woodcutter chased the wolf away. Little Red Riding Hood and her grandmother were safe. She learned never to talk to strangers in the woods again.', image: 'images/tales/littlered-4.png' }
+        ]
+    }
+};
+
+const talesGrid = document.getElementById('tales-grid');
+const talesReader = document.getElementById('tales-reader');
+const talesReaderClose = document.getElementById('tales-reader-close');
+const talesPageIllustration = document.getElementById('tales-page-illustration');
+const talesReaderStoryTitle = document.getElementById('tales-reader-story-title');
+const talesPageText = document.getElementById('tales-page-text');
+const talesPageIndicator = document.getElementById('tales-page-indicator');
+const talesBtnPrev = document.getElementById('tales-btn-prev');
+const talesBtnNext = document.getElementById('tales-btn-next');
+
+let currentTaleId = null;
+let currentTalePage = 0;
+
+function openTale(storyId) {
+    const tale = TALES[storyId];
+    if (!tale) return;
+    currentTaleId = storyId;
+    currentTalePage = 0;
+    talesReaderStoryTitle.textContent = tale.title;
+    const talesTab = talesReader.parentElement;
+    talesTab.scrollTop = 0;
+    talesReader.hidden = false;
+    talesTab.classList.add('tales-reader-open');
+    renderTalePage();
+}
+
+function closeTale() {
+    talesReader.hidden = true;
+    talesReader.parentElement.classList.remove('tales-reader-open');
+    currentTaleId = null;
+    currentTalePage = 0;
+}
+
+function renderTalePage() {
+    const tale = currentTaleId ? TALES[currentTaleId] : null;
+    if (!tale) return;
+    const page = tale.pages[currentTalePage];
+    if (!page) return;
+    talesPageText.textContent = page.text;
+    talesPageIllustration.style.backgroundImage = page.image ? `url(${page.image})` : 'none';
+    talesPageIndicator.textContent = `${currentTalePage + 1} / ${tale.pages.length}`;
+    talesBtnPrev.disabled = currentTalePage === 0;
+    talesBtnNext.disabled = currentTalePage === tale.pages.length - 1;
+}
+
+talesGrid.querySelectorAll('.story-card').forEach(card => {
+    card.addEventListener('click', () => openTale(card.getAttribute('data-story')));
+});
+talesReaderClose.addEventListener('click', closeTale);
+talesBtnPrev.addEventListener('click', () => {
+    if (currentTaleId && currentTalePage > 0) {
+        currentTalePage--;
+        renderTalePage();
+    }
+});
+talesBtnNext.addEventListener('click', () => {
+    if (currentTaleId && TALES[currentTaleId] && currentTalePage < TALES[currentTaleId].pages.length - 1) {
+        currentTalePage++;
+        renderTalePage();
+    }
+});
