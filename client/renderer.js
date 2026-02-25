@@ -1,4 +1,6 @@
-const socket = io("http://localhost:3000");
+const socket = io("http://localhost:3000", {
+    autoConnect: false
+});
 
 // --- 1. Tab Switching ---
 const navLinks = document.querySelectorAll('.nav-links li');
@@ -31,8 +33,13 @@ function showToast(message) {
 // --- 3. UI & State ---
 let currentRoomId = null;
 let currentUser = null;
+let currentAccessToken = null;
 const statusBadge = document.getElementById('status-badge');
 const inputRoomId = document.getElementById('input-room-id');
+
+socket.on('connect_error', (error) => {
+    showToast(`Socket authentication failed: ${error.message}`);
+});
 
 // --- 4. Socket Room Logic ---
 socket.on('room-created', (roomId) => {
@@ -73,6 +80,32 @@ document.getElementById('btn-join').addEventListener('click', () => {
 const authOverlay = document.getElementById('auth-overlay');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
+const showRegisterLink = document.getElementById('show-register');
+const showLoginLink = document.getElementById('show-login');
+
+function showRegisterForm() {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+}
+
+function showLoginForm() {
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+}
+
+if (showRegisterLink) {
+    showRegisterLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        showRegisterForm();
+    });
+}
+
+if (showLoginLink) {
+    showLoginLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        showLoginForm();
+    });
+}
 
 // --- Auth form switch (Log In <-> Sign Up) ---
 const showRegister = document.getElementById('show-register');
@@ -103,7 +136,7 @@ loginForm.addEventListener('submit', async (e) => {
     try {
         const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p}) });
         const data = await res.json();
-        if (data.success) handleLoginSuccess(data.user);
+        if (data.success) handleLoginSuccess(data.user, data.accessToken);
         else showToast(data.message || 'Login failed (登录失败)'); 
     } catch(e) { showToast('Server connection error (服务器连接失败)'); }
 });
@@ -116,17 +149,25 @@ registerForm.addEventListener('submit', async (e) => {
     try {
         const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p, role:r, nickname: document.getElementById('reg-nickname').value, email: document.getElementById('reg-email').value}) });
         const data = await res.json();
-        if(data.success) { showToast('Account created! (账号已创建)'); registerForm.style.display='none'; loginForm.style.display='block'; }
+        if(data.success) { showToast('Account created successfully.'); showLoginForm(); }
         else showToast(data.message || 'Registration failed (注册失败)');
     } catch(e) { showToast('Server connection error (服务器连接失败)'); }
 });
 
-function handleLoginSuccess(user) {
+function handleLoginSuccess(user, accessToken) {
     currentUser = user;
+    currentAccessToken = accessToken || null;
     authOverlay.style.display = 'none';
     document.getElementById('current-user-name').innerText = user.nickname;
     document.getElementById('current-user-role').innerText = user.role.toUpperCase();
     document.getElementById('current-user-avatar').innerHTML = user.nickname.charAt(0).toUpperCase();
+
+    if (currentAccessToken) {
+        socket.auth = { token: currentAccessToken };
+        socket.connect();
+    } else {
+        showToast('Login succeeded but token is missing.');
+    }
 
     const isChild = user.role === 'child';
     document.getElementById('btn-create').style.display = isChild ? 'none' : 'flex';
