@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const bodyParser = require('body-parser');
 const db = require('./db');
+const { registerGameHandlers } = require('./games');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -48,7 +49,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 // --- Socket.io 实时通信逻辑 ---
 io.on('connection', (socket) => {
   console.log('User Connected:', socket.id);
@@ -86,7 +86,9 @@ io.on('connection', (socket) => {
   socket.on('webrtc-answer', (data) => socket.to(data.roomId).emit('webrtc-answer', data.answer));
   socket.on('webrtc-ice-candidate', (data) => socket.to(data.roomId).emit('webrtc-ice-candidate', data.candidate));
 
-  socket.on('disconnect', () => console.log('User Disconnected:', socket.id));
+  registerGameHandlers(io, socket);
+
+  socket.on('disconnect', () => console.log('User Disconnected:', socket.id)); 
 });
 
 const PORT = process.env.PORT || 3000;
