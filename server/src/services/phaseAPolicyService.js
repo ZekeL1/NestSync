@@ -23,7 +23,7 @@ function enforceCognitoOnlyForLogin() {
       ok: false,
       status: 503,
       error:
-        "Phase A policy: local login is disabled. Set AUTH_MODE=cognito and configure Cognito values in server/v2/.env."
+        "Cloud auth policy: local login is disabled. Set AUTH_MODE=cognito and configure Cognito values in server/.env."
     };
   }
 
@@ -32,22 +32,11 @@ function enforceCognitoOnlyForLogin() {
     return {
       ok: false,
       status: 503,
-      error: `Phase A policy: missing Cognito config: ${missing.join(", ")}`
+      error: `Cloud auth policy: missing Cognito config: ${missing.join(", ")}`
     };
   }
 
   return { ok: true };
-}
-
-function rejectLegacyRegisterResponse() {
-  return {
-    status: 410,
-    body: {
-      success: false,
-      message:
-        "Phase A policy: local registration is disabled. Use Cognito-managed user provisioning."
-    }
-  };
 }
 
 function enforceCognitoOnlyForRegister() {
@@ -56,7 +45,7 @@ function enforceCognitoOnlyForRegister() {
       ok: false,
       status: 503,
       error:
-        "Phase A policy: register is Cognito-only. Set AUTH_MODE=cognito and configure Cognito values in server/v2/.env."
+        "Cloud auth policy: register is Cognito-only. Set AUTH_MODE=cognito and configure Cognito values in server/.env."
     };
   }
 
@@ -65,7 +54,7 @@ function enforceCognitoOnlyForRegister() {
     return {
       ok: false,
       status: 503,
-      error: `Phase A policy: missing Cognito config: ${missing.join(", ")}`
+      error: `Cloud auth policy: missing Cognito config: ${missing.join(", ")}`
     };
   }
 
@@ -74,6 +63,5 @@ function enforceCognitoOnlyForRegister() {
 
 module.exports = {
   enforceCognitoOnlyForLogin,
-  rejectLegacyRegisterResponse,
   enforceCognitoOnlyForRegister
 };

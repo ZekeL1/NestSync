@@ -6,6 +6,7 @@ const router = express.Router();
 router.get("/me", authenticateToken, (req, res) => {
   return res.json({
     userId: req.auth.userId,
+    username: req.auth.username,
     email: req.auth.email,
     role: req.auth.role,
     displayName: req.auth.displayName

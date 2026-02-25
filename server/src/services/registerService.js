@@ -3,7 +3,7 @@ const { enforceCognitoOnlyForRegister } = require("./phaseAPolicyService");
 
 const allowedRoles = new Set(["parent", "child"]);
 
-function mapCognitoRegisterError(error) {
+function mapRegisterError(error) {
   const code = error.name || error.Code || "";
   const message = error.message || "";
   if (code === "UsernameExistsException") {
@@ -28,7 +28,7 @@ function mapCognitoRegisterError(error) {
   return null;
 }
 
-async function registerWithAuthV2(payload) {
+async function registerWithAuth(payload) {
   const policy = enforceCognitoOnlyForRegister();
   if (!policy.ok) {
     return policy;
@@ -44,11 +44,7 @@ async function registerWithAuthV2(payload) {
   }
 
   if (!allowedRoles.has(role)) {
-    return {
-      ok: false,
-      status: 400,
-      error: "Role must be either parent or child"
-    };
+    return { ok: false, status: 400, error: "Role must be either parent or child" };
   }
 
   try {
@@ -64,12 +60,13 @@ async function registerWithAuthV2(payload) {
       ok: true,
       status: 201,
       data: {
-        message: "User registered in Cognito successfully",
+        message:
+          "User registered in Cognito successfully. A Cognito email has been sent for account verification/invitation.",
         user
       }
     };
   } catch (error) {
-    const mapped = mapCognitoRegisterError(error);
+    const mapped = mapRegisterError(error);
     if (mapped) {
       return { ok: false, status: mapped.status, error: mapped.message };
     }
@@ -78,5 +75,5 @@ async function registerWithAuthV2(payload) {
 }
 
 module.exports = {
-  registerWithAuthV2
+  registerWithAuth
 };

@@ -27,7 +27,7 @@ function mapCognitoError(error) {
   return null;
 }
 
-async function loginWithAuthV2(principal, password) {
+async function loginWithAuth(principal, password) {
   if (!principal || !password) {
     return {
       ok: false,
@@ -36,9 +36,9 @@ async function loginWithAuthV2(principal, password) {
     };
   }
 
-  const phaseACheck = enforceCognitoOnlyForLogin();
-  if (!phaseACheck.ok) {
-    return phaseACheck;
+  const policy = enforceCognitoOnlyForLogin();
+  if (!policy.ok) {
+    return policy;
   }
 
   try {
@@ -77,5 +77,5 @@ async function loginWithAuthV2(principal, password) {
 }
 
 module.exports = {
-  loginWithAuthV2
+  loginWithAuth
 };
