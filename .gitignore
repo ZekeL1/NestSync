@@ -70,27 +70,6 @@ web_modules/
 .env.*
 !.env.example
 
-# Explicit project env files
-server/.env
-server/v2/.env
-client/.env
-
-# Secrets and credentials
-*.pem
-*.key
-*.p12
-*.pfx
-*.crt
-*.cer
-*.jks
-*.keystore
-*.kdbx
-id_rsa
-id_ed25519
-credentials.json
-service-account.json
-secrets.json
-
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
