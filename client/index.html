@@ -101,7 +101,40 @@
             </div>
             
             <div id="games" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Games Area</h1></div></div>
-            <div id="tales" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Tales Area</h1></div></div>
+            <div id="tales" class="tab-content tales-tab">
+                <div class="tales-header">
+                    <h2 class="tales-title"><i class="fa-solid fa-book-open"></i> Choose a Story</h2>
+                </div>
+                <div class="tales-grid" id="tales-grid">
+                    <div class="story-card" data-story="cinderella" tabindex="0">
+                        <div class="story-cover story-cover-cinderella"></div>
+                        <span class="story-name">Cinderella</span>
+                    </div>
+                    <div class="story-card" data-story="peterpan" tabindex="0">
+                        <div class="story-cover story-cover-peterpan"></div>
+                        <span class="story-name">Peter Pan</span>
+                    </div>
+                    <div class="story-card" data-story="littlered" tabindex="0">
+                        <div class="story-cover story-cover-littlered"></div>
+                        <span class="story-name">Little Red Riding Hood</span>
+                    </div>
+                </div>
+                <div class="tales-reader" id="tales-reader" hidden>
+                    <button class="tales-reader-close" id="tales-reader-close" title="Back to list"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="tales-reader-inner">
+                        <div class="tales-page-illustration" id="tales-page-illustration"></div>
+                        <div class="tales-page-text-wrap">
+                            <h3 class="tales-reader-story-title" id="tales-reader-story-title"></h3>
+                            <p class="tales-page-text" id="tales-page-text"></p>
+                        </div>
+                    </div>
+                    <div class="tales-nav">
+                        <button class="tales-btn tales-btn-prev" id="tales-btn-prev" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                        <span class="tales-page-indicator" id="tales-page-indicator">1 / 1</span>
+                        <button class="tales-btn tales-btn-next" id="tales-btn-next"><i class="fa-solid fa-chevron-right"></i> Next</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
