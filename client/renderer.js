@@ -74,6 +74,28 @@ const authOverlay = document.getElementById('auth-overlay');
 const loginForm = document.getElementById('login-form');
 const registerForm = document.getElementById('register-form');
 
+// --- Auth form switch (Log In <-> Sign Up) ---
+const showRegister = document.getElementById('show-register');
+const showLogin = document.getElementById('show-login');
+
+if (showRegister) {
+  showRegister.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    document.getElementById('login-error').innerText = '';
+  });
+}
+
+if (showLogin) {
+  showLogin.addEventListener('click', (e) => {
+    e.preventDefault();
+    registerForm.style.display = 'none';
+    loginForm.style.display = 'block';
+    document.getElementById('reg-error').innerText = '';
+  });
+}
+
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const u = document.getElementById('login-username').value;
@@ -328,3 +350,13 @@ talesBtnNext.addEventListener('click', () => {
         renderTalePage();
     }
 });
+
+// --- 10. Arcade Games (init if available) ---
+if (typeof window.initArcadeGames === 'function') {
+    window.initArcadeGames({
+        socket,
+        showToast,
+        getCurrentUser: () => currentUser,
+        getCurrentRoomId: () => currentRoomId,
+    });
+}
