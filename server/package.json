@@ -12,7 +12,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.884.0",
+    "body-parser": "^2.2.2",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jose": "^5.10.0",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.17.1",
     "socket.io": "^4.8.3"
   }
