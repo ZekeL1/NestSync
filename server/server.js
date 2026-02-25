@@ -3,10 +3,14 @@ const http = require('http');
 const { Server } = require("socket.io");
 const path = require('path');
 const bodyParser = require('body-parser');
-const { loginWithAuthV2 } = require('./v2/src/services/loginService');
-const { registerWithAuthV2 } = require('./v2/src/services/registerService');
-const { mountV2Api } = require('./v2/src/legacy/mountV2Api');
-const { registerLegacySocketBridge } = require('./v2/src/legacy/registerLegacySocketBridge');
+const { loginWithAuth } = require('./src/services/loginService');
+const { registerWithAuth } = require('./src/services/registerService');
+const {
+  requestPasswordReset,
+  confirmPasswordReset
+} = require('./src/services/passwordService');
+const { mountApi } = require('./src/legacy/mountApi');
+const { registerLegacySocketBridge } = require('./src/legacy/registerLegacySocketBridge');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -14,11 +18,11 @@ const io = new Server(httpServer, { cors: { origin: "*" } });
 
 app.use(express.static(path.join(__dirname, '../client')));
 app.use(bodyParser.json());
-mountV2Api(app);
+mountApi(app);
 
 // --- API 接口: 注册与登录 ---
 app.post('/api/register', async (req, res) => {
-    const result = await registerWithAuthV2(req.body || {});
+    const result = await registerWithAuth(req.body || {});
     if (!result.ok) {
         return res.status(result.status).json({ success: false, message: result.error });
     }
@@ -32,7 +36,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { username, email, password } = req.body || {};
     const principal = username || email;
-    const result = await loginWithAuthV2(principal, password);
+    const result = await loginWithAuth(principal, password);
     if (!result.ok) {
         return res.status(result.status).json({ success: false, message: result.error });
     }
@@ -51,6 +55,22 @@ app.post('/api/login', async (req, res) => {
             email: user.email || null
         }
     });
+});
+
+app.post('/api/password/forgot', async (req, res) => {
+    const result = await requestPasswordReset(req.body || {});
+    if (!result.ok) {
+        return res.status(result.status).json({ success: false, message: result.error });
+    }
+    return res.status(result.status).json({ success: true, message: result.data.message });
+});
+
+app.post('/api/password/reset', async (req, res) => {
+    const result = await confirmPasswordReset(req.body || {});
+    if (!result.ok) {
+        return res.status(result.status).json({ success: false, message: result.error });
+    }
+    return res.status(result.status).json({ success: true, message: result.data.message });
 });
 
 registerLegacySocketBridge(io);
