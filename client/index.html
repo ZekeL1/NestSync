@@ -29,6 +29,9 @@
                 <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
                     No account? <a href="#" id="show-register" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Sign Up</a>
                 </div>
+                <div style="margin-top:8px; font-size:0.9rem; color:#636e72;">
+                    Forgot password? <a href="#" id="show-forgot" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Reset here</a>
+                </div>
                 <div id="login-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
             </form>
 
@@ -52,6 +55,24 @@
                     Has account? <a href="#" id="show-login" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
                 </div>
                 <div id="reg-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
+            </form>
+
+            <form id="forgot-form" style="display:none;">
+                <input type="text" id="forgot-identifier" class="auth-input" placeholder="Username or Email" required>
+                <button type="submit" class="btn-full">Send Reset Code</button>
+                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                    Back to <a href="#" id="back-to-login-from-forgot" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
+                </div>
+            </form>
+
+            <form id="reset-form" style="display:none;">
+                <input type="text" id="reset-identifier" class="auth-input" placeholder="Username or Email" required>
+                <input type="text" id="reset-code" class="auth-input" placeholder="Verification Code" required>
+                <input type="password" id="reset-new-password" class="auth-input" placeholder="New Password" required>
+                <button type="submit" class="btn-full">Reset Password</button>
+                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                    Back to <a href="#" id="back-to-login-from-reset" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
+                </div>
             </form>
         </div>
     </div>
