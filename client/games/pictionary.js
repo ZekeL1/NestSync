@@ -20,7 +20,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
             <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting for round to start...</div>
                         <div id="pict-wait-hint" style="opacity:.75; margin-bottom:14px;">Click Start to begin.</div>
             <div style="display:flex; justify-content:center; margin-bottom:14px;">
-              <button id="pict-wait-start" class="btn-primary" style="min-width:160px;"><i class="fa-solid fa-play"></i> Start</button>
+                            <button id="pict-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;"><i class="fa-solid fa-play" style="font-size:1rem;"></i> Start</button>
             </div>
             <div class="glass-panel" style="padding:10px; text-align:left;">
               <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
@@ -131,6 +131,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     let currentTool = 'brush';
     let isDrawing = false;
     let last = null;
+    let activeRoomId = getJoinedRoomId();
 
     function appendGameMsg(text, type = 'system') {
         const div = document.createElement('div');
@@ -140,6 +141,22 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         div.appendChild(span);
         logEl.appendChild(div);
         logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function resetLocalRoomView() {
+        drawerId = null;
+        drawerName = null;
+        myWord = null;
+        leaderboard = [];
+        currentTool = 'brush';
+        guessEl.value = '';
+        closeWordModal();
+        clearBoard();
+        setRoundUI(false);
+
+        logEl.innerHTML = '';
+        appendGameMsg('Game ready. Waiting for start.', 'system');
+        updateStatus();
     }
 
     function renderLeaderboard(items) {
@@ -465,12 +482,22 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     });
 
     socket.on('room-created', () => {
+        const nextRoomId = getJoinedRoomId();
+        if (nextRoomId && nextRoomId !== activeRoomId) {
+            resetLocalRoomView();
+        }
+        activeRoomId = nextRoomId;
         syncProfile();
         refreshStartAvailability();
         socket.emit('pict-request-history');
     });
 
     socket.on('room-joined', () => {
+        const nextRoomId = getJoinedRoomId();
+        if (nextRoomId && nextRoomId !== activeRoomId) {
+            resetLocalRoomView();
+        }
+        activeRoomId = nextRoomId;
         syncProfile();
         refreshStartAvailability();
         socket.emit('pict-request-history');
@@ -483,10 +510,17 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     });
 
     socket.on('pict-state', (state) => {
+        const wasRoundActive = roundActive;
         drawerId = state.drawerId || null;
         drawerName = state.drawerName || null;
         leaderboard = state.leaderboard || [];
         setRoundUI(!!state.roundActive);
+
+        if (!wasRoundActive && state.roundActive) {
+            const drawerText = drawerId === socket.id ? 'You' : (drawerName || 'Unknown');
+            appendGameMsg(`Round is already in progress. Drawer: ${drawerText}`, 'system');
+        }
+
         updateStatus();
     });
 
