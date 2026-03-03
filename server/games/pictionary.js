@@ -251,6 +251,17 @@ function registerPictionaryHandlers(io, socket) {
       roomId,
     });
 
+    if (!correct) {
+      io.to(getRoomChannel(roomId)).emit('pict-guess-feedback', {
+        correct: false,
+        guesserId: socket.id,
+        guesserName: getPlayerName(state, socket.id),
+        message: 'Wrong answer, try again!',
+        roomId,
+      });
+      return;
+    }
+
     if (correct) {
       state.scores[socket.id] = (state.scores[socket.id] || 0) + 1;
       const answerWord = state.word;
