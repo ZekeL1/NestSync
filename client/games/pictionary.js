@@ -20,7 +20,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
           <div style="width:min(520px, 92%);">
             <div style="font-size:40px; margin-bottom:8px; color:#6c5ce7;"><i class="fa-solid fa-spinner fa-spin"></i></div>
             <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting for round to start...</div>
-            <div style="opacity:.75; margin-bottom:14px;">Click Start to begin.</div>
+                        <div id="pict-wait-hint" style="opacity:.75; margin-bottom:14px;">Click Start to begin.</div>
             <div style="display:flex; justify-content:center; margin-bottom:14px;">
               <button id="pict-wait-start" class="btn-primary" style="min-width:160px;"><i class="fa-solid fa-play"></i> Start</button>
             </div>
@@ -81,6 +81,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
     const statusEl = document.getElementById('pict-status');
     const waitStartBtn = document.getElementById('pict-wait-start');
+    const waitHintEl = document.getElementById('pict-wait-hint');
     const nextBtn = document.getElementById('pict-next');
     const endBtn = document.getElementById('pict-end');
     const clearBtn = document.getElementById('pict-clear');
@@ -261,9 +262,31 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     }
 
     function openWordModal() {
+        const roomId = getJoinedRoomId();
+        if (!roomId) {
+            showToast('Please join a room first');
+            return;
+        }
+
         modalWordEl.value = '';
         wordModalEl.style.display = 'flex';
         modalWordEl.focus();
+    }
+
+    function refreshStartAvailability(notify = false) {
+        const joined = !!getJoinedRoomId();
+
+        waitStartBtn.disabled = !joined;
+        waitStartBtn.style.opacity = joined ? '1' : '.55';
+        waitStartBtn.style.cursor = joined ? 'pointer' : 'not-allowed';
+
+        if (waitHintEl) {
+            waitHintEl.innerText = joined ? 'Click Start to begin.' : 'Please join a room first.';
+        }
+
+        if (notify && !joined) {
+            showToast('Please join a room first');
+        }
     }
 
     function closeWordModal() {
@@ -359,11 +382,13 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
     socket.on('room-created', () => {
         syncProfile();
+        refreshStartAvailability();
         socket.emit('pict-request-history');
     });
 
     socket.on('room-joined', () => {
         syncProfile();
+        refreshStartAvailability();
         socket.emit('pict-request-history');
     });
 
@@ -449,6 +474,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     }
 
     setRoundUI(false);
+    refreshStartAvailability(true);
     updateStatus();
 }
 
