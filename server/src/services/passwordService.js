@@ -3,6 +3,7 @@ const {
   confirmForgotPassword
 } = require("../auth/cognitoService");
 const { enforceCognitoOnlyForLogin } = require("./phaseAPolicyService");
+const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 
 function mapPasswordError(error) {
   const code = error.name || error.Code || "";
@@ -17,7 +18,11 @@ function mapPasswordError(error) {
     return { status: 400, message: "Verification code has expired" };
   }
   if (code === "InvalidPasswordException") {
-    return { status: 400, message: "New password does not satisfy policy" };
+    return {
+      status: 400,
+      message:
+        "New password does not satisfy policy. Use at least 6 characters with at least one letter and one number. Uppercase and symbols are allowed but not required. If Cognito is stricter, update your User Pool password policy."
+    };
   }
   if (
     code === "CredentialsProviderError" ||
@@ -77,6 +82,15 @@ async function confirmPasswordReset(payload) {
       ok: false,
       status: 400,
       error: "Username/email, code, and newPassword are required"
+    };
+  }
+
+  if (!projectPasswordPattern.test(String(newPassword))) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        "New password must be 6-64 characters with at least one letter and one number. Uppercase and symbols are optional."
     };
   }
 

@@ -128,6 +128,7 @@ COGNITO_ISSUER=https://cognito-idp.<region>.amazonaws.com/<pool_id>
   - `cognito-idp:AdminAddUserToGroup`
   - `cognito-idp:ForgotPassword`
   - `cognito-idp:ConfirmForgotPassword`
+  - `cognito-idp:AdminUpdateUserAttributes` (used to set email_verified before sending reset code)
 
 ### 6) Run
 - Start backend:
@@ -147,5 +148,25 @@ COGNITO_ISSUER=https://cognito-idp.<region>.amazonaws.com/<pool_id>
 - Forgot password email reset is supported through Cognito-backed endpoints:
   - `POST /api/password/forgot`
   - `POST /api/password/reset`
-- Current frontend does not include dedicated reset forms yet.
-- Add a minimal reset UI in a later step to expose this flow to end users.
+- Frontend includes forgot/reset forms (forgot-form, reset-form) in the auth overlay.
+
+## Password Reset Email Troubleshooting
+
+If the verification code email is not received after requesting a password reset:
+
+### 1. `email_verified` attribute
+Cognito may not send forgot-password emails when `email_verified` is `false`. Since registration has no separate email verification step, the server now **automatically sets `email_verified: true`** when a user requests a password reset (as long as the email exists in the pool). No manual verification needed.
+
+### 2. SES sandbox mode
+If your User Pool uses "Send email with Amazon SES" and SES is in sandbox mode, you can only send to **verified** recipient addresses. Either:
+- Add the recipient email as a verified identity in SES (SES → Verified identities → Create identity), or
+- Request production access for SES to send to any address.
+
+### 3. Cognito default email limits
+With "Send email with Cognito" (default), Cognito has daily limits. For higher volume, switch to "Send email with Amazon SES" in the User Pool Messaging tab.
+
+### 4. Check spam / junk
+Cognito emails often land in spam. Ask users to check spam and add the sender to contacts.
+
+### 5. User Pool messaging
+In Cognito → User Pools → your pool → Messaging → Message customizations, ensure the "Verification message" template is configured for forgot-password codes.

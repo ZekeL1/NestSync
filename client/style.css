@@ -190,6 +190,9 @@ body {
 .auth-input:focus { background: white; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15); }
 .btn-full { width: 100%; padding: 16px; background: var(--primary-color); color: white; border: none; border-radius: 16px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px; box-shadow: 0 10px 25px rgba(108, 92, 231, 0.4); transition: 0.2s var(--ease-bounce); }
 .btn-full:hover { transform: scale(1.02); }
+.resend-btn { flex-shrink: 0; padding: 8px 14px; font-size: 0.82rem; font-weight: 600; color: var(--primary-color); background: transparent; border: 1px solid rgba(108, 92, 231, 0.4); border-radius: 10px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+.resend-btn:hover:not(:disabled) { background: rgba(108, 92, 231, 0.08); border-color: var(--primary-color); }
+.resend-btn:disabled { color: #999; border-color: rgba(0,0,0,0.1); cursor: not-allowed; }
 
 /* --- Tales Module (local only) --- */
 .tales-tab { position: relative; padding: 24px; overflow-y: auto; min-height: 0; }

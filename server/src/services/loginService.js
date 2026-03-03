@@ -1,12 +1,16 @@
 const { verifyToken } = require("../auth/tokenService");
-const { loginWithCognito } = require("../auth/cognitoService");
+const { loginWithCognito, resolveCognitoUsername } = require("../auth/cognitoService");
 const { enforceCognitoOnlyForLogin } = require("./phaseAPolicyService");
 
 function mapCognitoError(error) {
   const code = error.name || error.Code || "";
   const message = error.message || "";
   if (code === "NotAuthorizedException" || code === "UserNotFoundException") {
-    return { status: 401, message: "Invalid credentials" };
+    return {
+      status: 401,
+      message:
+        "Invalid credentials or account not found. If you reset users recently, please register this account again."
+    };
   }
   if (code === "UserNotConfirmedException") {
     return { status: 403, message: "User is not confirmed in Cognito" };
@@ -42,7 +46,8 @@ async function loginWithAuth(principal, password) {
   }
 
   try {
-    const providerTokens = await loginWithCognito(principal, password);
+    const resolvedPrincipal = await resolveCognitoUsername(principal);
+    const providerTokens = await loginWithCognito(resolvedPrincipal, password);
     const identity = await verifyToken(providerTokens.idToken);
     if (!identity.role) {
       return {

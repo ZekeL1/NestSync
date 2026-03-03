@@ -18,12 +18,12 @@ function validateCognitoConfig() {
 }
 
 function enforceCognitoOnlyForLogin() {
-  if (config.authMode !== "cognito") {
+  if (config.authMode && config.authMode !== "cognito") {
     return {
       ok: false,
       status: 503,
       error:
-        "Cloud auth policy: local login is disabled. Set AUTH_MODE=cognito and configure Cognito values in server/.env."
+        "Cloud auth policy: local login is disabled. Set AUTH_MODE=cognito in server/.env."
     };
   }
 
@@ -40,12 +40,12 @@ function enforceCognitoOnlyForLogin() {
 }
 
 function enforceCognitoOnlyForRegister() {
-  if (config.authMode !== "cognito") {
+  if (config.authMode && config.authMode !== "cognito") {
     return {
       ok: false,
       status: 503,
       error:
-        "Cloud auth policy: register is Cognito-only. Set AUTH_MODE=cognito and configure Cognito values in server/.env."
+        "Cloud auth policy: register is Cognito-only. Set AUTH_MODE=cognito in server/.env."
     };
   }
 
