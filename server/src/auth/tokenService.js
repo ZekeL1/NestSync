@@ -1,34 +1,7 @@
-const jwt = require("jsonwebtoken");
 const { createRemoteJWKSet, jwtVerify } = require("jose");
 const { config } = require("../config");
 
 let jwks;
-
-function issueDevToken(user) {
-  return jwt.sign(
-    {
-      sub: String(user.id),
-      username: user.username,
-      email: user.email || null,
-      role: user.role,
-      name: user.nickname || user.username
-    },
-    config.devJwtSecret,
-    { algorithm: "HS256", expiresIn: config.devTokenExpiresIn }
-  );
-}
-
-async function verifyDevToken(token) {
-  const decoded = jwt.verify(token, config.devJwtSecret, { algorithms: ["HS256"] });
-  return {
-    userId: decoded.sub,
-    username: decoded.username || null,
-    email: decoded.email || null,
-    role: decoded.role || null,
-    displayName: decoded.name || decoded.username || null,
-    raw: decoded
-  };
-}
 
 function getJwks() {
   if (!config.cognitoIssuer) {
@@ -74,13 +47,9 @@ async function verifyCognitoToken(token) {
 }
 
 async function verifyToken(token) {
-  if (config.authMode === "dev") {
-    return verifyDevToken(token);
-  }
   return verifyCognitoToken(token);
 }
 
 module.exports = {
-  issueDevToken,
   verifyToken
 };
