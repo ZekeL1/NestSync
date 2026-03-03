@@ -32,6 +32,8 @@ let localStream = null;
 let peerConnection = null;
 
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
+const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
 
 function showToast(message) {
   const container = document.getElementById("toast-container");
@@ -46,6 +48,24 @@ function showToast(message) {
     toast.style.opacity = "0";
     setTimeout(() => toast.remove(), 300);
   }, 3200);
+}
+
+function validateProjectPassword(password) {
+  return projectPasswordPattern.test(String(password || ""));
+}
+
+function setButtonPending(button, pending, pendingText) {
+  if (!button) return;
+  if (pending) {
+    button.dataset.originalText = button.textContent;
+    button.textContent = pendingText || "Please wait...";
+    button.disabled = true;
+    return;
+  }
+  if (button.dataset.originalText) {
+    button.textContent = button.dataset.originalText;
+  }
+  button.disabled = false;
 }
 
 function toAuthPrincipalPayload(identifier) {
@@ -92,6 +112,42 @@ function activateTab(targetTabId) {
   if (targetContent) targetContent.classList.add("active-content");
 }
 
+let resendTimerIntervalId = null;
+
+function clearResendTimer() {
+  if (resendTimerIntervalId) {
+    clearInterval(resendTimerIntervalId);
+    resendTimerIntervalId = null;
+  }
+  const btn = document.getElementById("btn-resend-code");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Resend";
+  }
+}
+
+function startResendCountdown(seconds) {
+  if (resendTimerIntervalId) {
+    clearInterval(resendTimerIntervalId);
+    resendTimerIntervalId = null;
+  }
+  const btn = document.getElementById("btn-resend-code");
+  if (!btn) return;
+  btn.disabled = true;
+  let remaining = seconds;
+  btn.textContent = `Resend (${remaining}s)`;
+  resendTimerIntervalId = setInterval(() => {
+    remaining--;
+    btn.textContent = `Resend (${remaining}s)`;
+    if (remaining <= 0) {
+      clearInterval(resendTimerIntervalId);
+      resendTimerIntervalId = null;
+      btn.disabled = false;
+      btn.textContent = "Resend";
+    }
+  }, 1000);
+}
+
 function showOnlyForm(formKey) {
   const forms = {
     login: loginForm,
@@ -99,6 +155,8 @@ function showOnlyForm(formKey) {
     forgot: forgotForm,
     reset: resetForm
   };
+
+  if (formKey !== "reset") clearResendTimer();
 
   Object.entries(forms).forEach(([key, form]) => {
     if (!form) return;
@@ -194,8 +252,37 @@ backToLoginFromReset.addEventListener("click", (event) => {
   showOnlyForm("login");
 });
 
+const btnResendCode = document.getElementById("btn-resend-code");
+if (btnResendCode) {
+  btnResendCode.addEventListener("click", async () => {
+    const identifier = document.getElementById("reset-identifier").value.trim();
+    const principalPayload = toAuthPrincipalPayload(identifier);
+    if (!principalPayload) {
+      showToast("Username or email is required.");
+      return;
+    }
+    try {
+      btnResendCode.disabled = true;
+      btnResendCode.textContent = "Sending...";
+      const data = await requestJson("/api/password/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(principalPayload)
+      });
+      if (!data.success) throw new Error(data.message || "Failed to send reset code");
+      startResendCountdown(60);
+      showToast(data.message || "Reset code sent. Check your email.");
+    } catch (error) {
+      showToast(error.message);
+      btnResendCode.disabled = false;
+      btnResendCode.textContent = "Resend";
+    }
+  });
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const submitButton = loginForm.querySelector('button[type="submit"]');
   const principal = document.getElementById("login-username").value.trim();
   const password = document.getElementById("login-password").value;
   const principalPayload = toAuthPrincipalPayload(principal);
@@ -206,6 +293,7 @@ loginForm.addEventListener("submit", async (event) => {
   }
 
   try {
+    setButtonPending(submitButton, true, "Logging in...");
     const data = await requestJson("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,19 +313,37 @@ loginForm.addEventListener("submit", async (event) => {
     handleLoginSuccess(mergedUser, data.accessToken);
     showToast(`Welcome back, ${mergedUser.nickname || mergedUser.username}.`);
   } catch (error) {
-    showToast(error.message);
+    if (String(error.message || "").includes("Invalid credentials")) {
+      showToast("Login failed: account not found or password incorrect. If users were reset, please sign up again.");
+    } else {
+      showToast(error.message);
+    }
+  } finally {
+    setButtonPending(submitButton, false);
   }
 });
 
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const submitButton = registerForm.querySelector('button[type="submit"]');
   const username = document.getElementById("reg-username").value.trim();
   const email = document.getElementById("reg-email").value.trim();
   const nickname = document.getElementById("reg-nickname").value.trim();
   const password = document.getElementById("reg-password").value;
   const role = document.querySelector('input[name="role"]:checked').value;
 
+  if (!usernamePattern.test(username)) {
+    showToast("Username must be 3-32 characters and use letters, numbers, dot, underscore, or hyphen.");
+    return;
+  }
+
+  if (!validateProjectPassword(password)) {
+    showToast("Password must be at least 6 characters and include at least one letter and one number.");
+    return;
+  }
+
   try {
+    setButtonPending(submitButton, true, "Creating...");
     const data = await requestJson("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -256,11 +362,14 @@ registerForm.addEventListener("submit", async (event) => {
     showOnlyForm("login");
   } catch (error) {
     showToast(error.message);
+  } finally {
+    setButtonPending(submitButton, false);
   }
 });
 
 forgotForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const submitButton = forgotForm.querySelector('button[type="submit"]');
   const identifier = document.getElementById("forgot-identifier").value.trim();
   const principalPayload = toAuthPrincipalPayload(identifier);
 
@@ -270,6 +379,7 @@ forgotForm.addEventListener("submit", async (event) => {
   }
 
   try {
+    setButtonPending(submitButton, true, "Sending...");
     const data = await requestJson("/api/password/forgot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -282,14 +392,18 @@ forgotForm.addEventListener("submit", async (event) => {
 
     document.getElementById("reset-identifier").value = identifier;
     showOnlyForm("reset");
+    startResendCountdown(60);
     showToast(data.message || "Reset code sent. Check your email.");
   } catch (error) {
     showToast(error.message);
+  } finally {
+    setButtonPending(submitButton, false);
   }
 });
 
 resetForm.addEventListener("submit", async (event) => {
   event.preventDefault();
+  const submitButton = resetForm.querySelector('button[type="submit"]');
   const identifier = document.getElementById("reset-identifier").value.trim();
   const code = document.getElementById("reset-code").value.trim();
   const newPassword = document.getElementById("reset-new-password").value;
@@ -300,7 +414,13 @@ resetForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  if (!validateProjectPassword(newPassword)) {
+    showToast("New password must be at least 6 characters and include at least one letter and one number.");
+    return;
+  }
+
   try {
+    setButtonPending(submitButton, true, "Resetting...");
     const data = await requestJson("/api/password/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -317,6 +437,8 @@ resetForm.addEventListener("submit", async (event) => {
     showOnlyForm("login");
   } catch (error) {
     showToast(error.message);
+  } finally {
+    setButtonPending(submitButton, false);
   }
 });
 

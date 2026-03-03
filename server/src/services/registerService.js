@@ -2,6 +2,9 @@ const { registerUserWithCognito } = require("../auth/cognitoService");
 const { enforceCognitoOnlyForRegister } = require("./phaseAPolicyService");
 
 const allowedRoles = new Set(["parent", "child"]);
+const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 
 function mapRegisterError(error) {
   const code = error.name || error.Code || "";
@@ -9,8 +12,15 @@ function mapRegisterError(error) {
   if (code === "UsernameExistsException") {
     return { status: 409, message: "Username already exists" };
   }
+  if (code === "EmailAlreadyExistsException") {
+    return { status: 409, message: "Email already exists. Use login or password reset." };
+  }
   if (code === "InvalidPasswordException") {
-    return { status: 400, message: "Password does not satisfy Cognito policy" };
+    return {
+      status: 400,
+      message:
+        "Password does not satisfy Cognito policy. For this project we require at least 6 characters with at least one letter and one number. Uppercase and symbols are allowed but not required. If Cognito is stricter, update your User Pool password policy."
+    };
   }
   if (code === "InvalidParameterException") {
     return { status: 400, message: error.message || "Invalid registration parameters" };
@@ -47,13 +57,39 @@ async function registerWithAuth(payload) {
     return { ok: false, status: 400, error: "Role must be either parent or child" };
   }
 
+  const normalizedUsername = String(username).trim();
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const normalizedNickname = String(nickname || normalizedUsername).trim();
+
+  if (!usernamePattern.test(normalizedUsername)) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        "Username must be 3-32 characters and can include letters, numbers, underscore, dot, or hyphen."
+    };
+  }
+
+  if (!emailPattern.test(normalizedEmail)) {
+    return { ok: false, status: 400, error: "Please enter a valid email address." };
+  }
+
+  if (!projectPasswordPattern.test(String(password || ""))) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        "Password must be 6-64 characters with at least one letter and one number. Uppercase and symbols are optional."
+    };
+  }
+
   try {
     const user = await registerUserWithCognito({
-      username,
-      email,
+      username: normalizedUsername,
+      email: normalizedEmail,
       password,
       role,
-      nickname
+      nickname: normalizedNickname
     });
 
     return {
