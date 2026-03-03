@@ -23,7 +23,7 @@
             <p id="auth-subtitle" style="color:#636e72; margin-bottom: 30px; font-weight:500;">Connect with your family.</p>
 
             <form id="login-form">
-                <input type="text" id="login-username" class="auth-input" placeholder="Username" required>
+                <input type="text" id="login-username" class="auth-input" placeholder="Username or Email" required>
                 <input type="password" id="login-password" class="auth-input" placeholder="Password" required>
                 <button type="submit" class="btn-full">Log In</button>
                 <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
@@ -40,6 +40,9 @@
                 <input type="email" id="reg-email" class="auth-input" placeholder="Email" required>
                 <input type="text" id="reg-nickname" class="auth-input" placeholder="Nickname (e.g. Dad)" required>
                 <input type="password" id="reg-password" class="auth-input" placeholder="Password" required>
+                <div style="margin:-4px 0 12px; font-size:0.82rem; color:#636e72; text-align:left;">
+                    Password rule: at least 6 characters with at least one letter and one number. Uppercase and symbols are optional.
+                </div>
                 
                 <div style="display:flex; gap:12px; margin-bottom:20px;">
                     <label style="flex:1; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
@@ -67,8 +70,14 @@
 
             <form id="reset-form" style="display:none;">
                 <input type="text" id="reset-identifier" class="auth-input" placeholder="Username or Email" required>
-                <input type="text" id="reset-code" class="auth-input" placeholder="Verification Code" required>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" id="reset-code" class="auth-input" placeholder="Verification Code" required style="flex:1;">
+                    <button type="button" id="btn-resend-code" class="resend-btn">Resend</button>
+                </div>
                 <input type="password" id="reset-new-password" class="auth-input" placeholder="New Password" required>
+                <div style="margin:-4px 0 12px; font-size:0.82rem; color:#636e72; text-align:left;">
+                    New password: at least 6 characters with at least one letter and one number.
+                </div>
                 <button type="submit" class="btn-full">Reset Password</button>
                 <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
                     Back to <a href="#" id="back-to-login-from-reset" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>

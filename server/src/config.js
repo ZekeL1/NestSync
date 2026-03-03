@@ -12,9 +12,7 @@ if (fs.existsSync(serverEnvPath)) {
 }
 
 const config = {
-  authMode: process.env.AUTH_MODE || "dev",
-  devJwtSecret: process.env.DEV_JWT_SECRET || "change-this-secret",
-  devTokenExpiresIn: process.env.DEV_TOKEN_EXPIRES_IN || "2h",
+  authMode: process.env.AUTH_MODE || "cognito",
   cognitoRegion: process.env.COGNITO_REGION || "",
   cognitoUserPoolId: process.env.COGNITO_USER_POOL_ID || "",
   cognitoAppClientId: process.env.COGNITO_APP_CLIENT_ID || "",
