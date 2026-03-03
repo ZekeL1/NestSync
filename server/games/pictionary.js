@@ -84,6 +84,31 @@ function isPictMember(socket) {
   return !!getSocketRoomId(socket);
 }
 
+function leavePictRoom(io, socket) {
+  const roomId = getSocketRoomId(socket);
+  if (!roomId) return;
+
+  const state = getState(roomId);
+  const channel = getRoomChannel(roomId);
+
+  socket.leave(channel);
+  delete state.playerNames[socket.id];
+
+  if (state.roundActive && state.drawerId === socket.id) {
+    endRound(io, roomId, state, {
+      winnerId: null,
+      winnerName: null,
+      word: state.word,
+      endedBy: 'System',
+      manual: true,
+    });
+  }
+
+  socket.data.pictRoomId = null;
+  emitPictState(io, roomId, state);
+  cleanupRoomStateIfEmpty(io, roomId);
+}
+
 function endRound(io, roomId, state, payload) {
   state.roundActive = false;
   state.word = null;
@@ -106,23 +131,7 @@ function joinPictRoom(io, socket, roomId, nickname) {
 
   const previousRoomId = getSocketRoomId(socket);
   if (previousRoomId && previousRoomId !== roomId) {
-    const previousState = getState(previousRoomId);
-    const previousChannel = getRoomChannel(previousRoomId);
-    socket.leave(previousChannel);
-    delete previousState.playerNames[socket.id];
-
-    if (previousState.roundActive && previousState.drawerId === socket.id) {
-      endRound(io, previousRoomId, previousState, {
-        winnerId: null,
-        winnerName: null,
-        word: previousState.word,
-        endedBy: 'System',
-        manual: true,
-      });
-    }
-
-    emitPictState(io, previousRoomId, previousState);
-    cleanupRoomStateIfEmpty(io, previousRoomId);
+    leavePictRoom(io, socket);
   }
 
   socket.data.pictRoomId = roomId;
@@ -153,6 +162,18 @@ function registerPictionaryHandlers(io, socket) {
     }
 
     joinPictRoom(io, socket, cleanRoomId, nickname);
+  });
+
+  socket.on('create-room', () => {
+    leavePictRoom(io, socket);
+  });
+
+  socket.on('join-room', (roomId) => {
+    const targetRoomId = sanitizeWord(roomId, 24);
+    const currentRoomId = getSocketRoomId(socket);
+    if (currentRoomId && currentRoomId !== targetRoomId) {
+      leavePictRoom(io, socket);
+    }
   });
 
   socket.on('pict-start', (payload = {}) => {
@@ -318,24 +339,7 @@ function registerPictionaryHandlers(io, socket) {
   });
 
   socket.on('disconnect', () => {
-    const roomId = getSocketRoomId(socket);
-    if (!roomId) return;
-
-    const state = getState(roomId);
-    delete state.playerNames[socket.id];
-
-    if (state.roundActive && state.drawerId === socket.id) {
-      endRound(io, roomId, state, {
-        winnerId: null,
-        winnerName: null,
-        word: state.word,
-        endedBy: 'System',
-        manual: true,
-      });
-    }
-
-    emitPictState(io, roomId, state);
-    cleanupRoomStateIfEmpty(io, roomId);
+    leavePictRoom(io, socket);
   });
 }
 
