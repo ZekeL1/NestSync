@@ -9,10 +9,8 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
             <div class="status-pill offline" id="pict-status">Offline</div>
           </div>
 
-          <div style="display:flex; gap:10px; align-items:center;">
-            <button id="pict-next" class="btn-primary"><i class="fa-solid fa-forward"></i> Next Round</button>
-            <button id="pict-end" class="btn-icon" title="End Round"><i class="fa-solid fa-flag-checkered"></i></button>
-            <button id="pict-clear" class="btn-icon" title="Clear"><i class="fa-solid fa-eraser"></i></button>
+                    <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
+                        <button id="pict-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-forward"></i> Next Round</button>
           </div>
         </div>
 
@@ -33,8 +31,22 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
         <div id="pict-live-area" style="display:none; gap:16px; height:calc(100% - 58px);">
           <div style="flex:1; min-width:520px;">
-            <div style="border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.5); height:100%; padding:10px; box-sizing:border-box;">
-              <canvas id="pict-canvas" width="900" height="560" style="width:100%; height:100%; background:#fff; border-radius:14px;"></canvas>
+                        <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
+                            <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
+                                    <i class="fa-solid fa-pen-ruler"></i>
+                                    <span>Drawing Canvas</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button id="pict-tool-brush" class="btn-icon" title="Brush" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-paintbrush"></i></button>
+                                    <button id="pict-tool-eraser" class="btn-icon" title="Eraser" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-eraser"></i></button>
+                                    <button id="pict-tool-clear" class="btn-icon" title="Clear Canvas" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+
+                            <div style="position:relative; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.5); border:2px solid rgba(108,92,231,.36); flex:1; min-height:0; padding:10px; box-sizing:border-box;">
+                                <canvas id="pict-canvas" width="900" height="560" style="width:100%; height:100%; background:#fff; border-radius:14px;"></canvas>
+                            </div>
             </div>
           </div>
 
@@ -58,11 +70,9 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
               </div>
               <div class="chat-input-area">
                 <input type="text" id="pict-guess" placeholder="Type your guess...">
-                <button id="pict-guess-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                                <button id="pict-guess-btn" class="btn-primary" style="width:40px; height:40px; min-width:40px; padding:0; border-radius:14px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-paper-plane"></i></button>
               </div>
             </div>
-
-            <div style="opacity:.75; font-size:12px; padding:0 4px;">Tip: only drawer can draw; everyone can end round or start next round.</div>
           </div>
         </div>
 
@@ -83,8 +93,6 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const waitStartBtn = document.getElementById('pict-wait-start');
     const waitHintEl = document.getElementById('pict-wait-hint');
     const nextBtn = document.getElementById('pict-next');
-    const endBtn = document.getElementById('pict-end');
-    const clearBtn = document.getElementById('pict-clear');
 
     const waitingEl = document.getElementById('pict-waiting');
     const liveAreaEl = document.getElementById('pict-live-area');
@@ -102,8 +110,15 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const modalWordEl = document.getElementById('pict-modal-word');
     const modalCancelBtn = document.getElementById('pict-modal-cancel');
     const modalConfirmBtn = document.getElementById('pict-modal-confirm');
+    const brushToolBtn = document.getElementById('pict-tool-brush');
+    const eraserToolBtn = document.getElementById('pict-tool-eraser');
+    const clearToolBtn = document.getElementById('pict-tool-clear');
 
     const canvas = document.getElementById('pict-canvas');
+    const brushCursorSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M18 2l4 4-8.5 8.5-4-4L18 2z'/><path d='M8 12l4 4'/><path d='M2 22c2.5-.2 4.4-.9 5.8-2.2C9.2 18.4 10 16.5 10 14'/></svg>`;
+    const brushCursor = `url("data:image/svg+xml,${encodeURIComponent(brushCursorSvg)}") 2 24, crosshair`;
+    const eraserCursorSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 20H7L3 16l9-9 8 8-5 5z'/><path d='M14 8l6 6'/></svg>`;
+    const eraserCursor = `url("data:image/svg+xml,${encodeURIComponent(eraserCursorSvg)}") 4 22, crosshair`;
     const ctx = canvas.getContext('2d');
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
@@ -113,6 +128,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     let myWord = null;
     let leaderboard = [];
     let roundActive = false;
+    let currentTool = 'brush';
     let isDrawing = false;
     let last = null;
 
@@ -168,11 +184,10 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         liveAreaEl.style.display = roundActive ? 'flex' : 'none';
 
         nextBtn.style.display = roundActive ? 'flex' : 'none';
-        endBtn.style.display = roundActive ? 'flex' : 'none';
-        clearBtn.style.display = roundActive ? 'flex' : 'none';
 
         if (!roundActive) {
             myWord = null;
+            currentTool = 'brush';
             wordEl.innerText = '-';
             stopDrawing();
         }
@@ -193,10 +208,35 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
         wordEl.innerText = myWord || '-';
         renderLeaderboard(leaderboard);
+        updateToolUI();
+        updateCanvasCursor();
+        updateGuessInputState();
     }
 
     function canDraw() {
         return roundActive && socket && socket.connected && drawerId && socket.id === drawerId;
+    }
+
+    function canGuess() {
+        return roundActive && socket && socket.connected && (!drawerId || socket.id !== drawerId);
+    }
+
+    function updateGuessInputState() {
+        const drawMode = canDraw();
+        const guessMode = canGuess();
+
+        guessEl.disabled = !guessMode;
+        guessBtn.disabled = !guessMode;
+        guessBtn.style.opacity = guessMode ? '1' : '.55';
+        guessBtn.style.cursor = guessMode ? 'pointer' : 'not-allowed';
+
+        if (drawMode) {
+            guessEl.placeholder = 'You are the drawer, guessing is disabled';
+        } else if (!roundActive) {
+            guessEl.placeholder = 'Round not started yet';
+        } else {
+            guessEl.placeholder = 'Type your guess...';
+        }
     }
 
     function getDisplayName() {
@@ -227,6 +267,13 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         ctx.stroke();
     }
 
+    function getCurrentToolStyle() {
+        if (currentTool === 'eraser') {
+            return { color: '#fff', width: 20 };
+        }
+        return { color: '#111', width: 4 };
+    }
+
     function getPos(event) {
         const rect = canvas.getBoundingClientRect();
         const clientX = event.touches ? event.touches[0].clientX : event.clientX;
@@ -240,7 +287,8 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     }
 
     function drawAndEmit(nextPos) {
-        const seg = { x1: last.x, y1: last.y, x2: nextPos.x, y2: nextPos.y, color: '#111', width: 4 };
+        const style = getCurrentToolStyle();
+        const seg = { x1: last.x, y1: last.y, x2: nextPos.x, y2: nextPos.y, color: style.color, width: style.width };
         drawSegment(seg);
         socket.emit('pict-draw', seg);
         last = nextPos;
@@ -249,6 +297,48 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     function stopDrawing() {
         isDrawing = false;
         last = null;
+    }
+
+    function setTool(nextTool) {
+        if (nextTool !== 'brush' && nextTool !== 'eraser') return;
+        currentTool = nextTool;
+        updateToolUI();
+        updateCanvasCursor();
+    }
+
+    function updateToolUI() {
+        const enabled = canDraw();
+        const activeColor = 'var(--primary-color)';
+        const inactiveBg = 'white';
+        const inactiveText = 'var(--text-main)';
+
+        [brushToolBtn, eraserToolBtn, clearToolBtn].forEach((btn) => {
+            if (!btn) return;
+            btn.disabled = !enabled;
+            btn.style.opacity = enabled ? '1' : '.55';
+            btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+        });
+
+        if (brushToolBtn) {
+            const active = currentTool === 'brush';
+            brushToolBtn.style.background = active ? activeColor : inactiveBg;
+            brushToolBtn.style.color = active ? 'white' : inactiveText;
+        }
+
+        if (eraserToolBtn) {
+            const active = currentTool === 'eraser';
+            eraserToolBtn.style.background = active ? activeColor : inactiveBg;
+            eraserToolBtn.style.color = active ? 'white' : inactiveText;
+        }
+    }
+
+    function updateCanvasCursor() {
+        if (!canDraw()) {
+            canvas.style.cursor = 'default';
+            return;
+        }
+
+        canvas.style.cursor = currentTool === 'eraser' ? eraserCursor : brushCursor;
     }
 
     function sendGuess() {
@@ -346,6 +436,13 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
     canvas.addEventListener('touchend', stopDrawing);
 
+    brushToolBtn.addEventListener('click', () => setTool('brush'));
+    eraserToolBtn.addEventListener('click', () => setTool('eraser'));
+    clearToolBtn.addEventListener('click', () => {
+        if (!roundActive || !canDraw()) return;
+        socket.emit('pict-clear');
+    });
+
     waitStartBtn.addEventListener('click', openWordModal);
     nextBtn.addEventListener('click', openWordModal);
 
@@ -353,19 +450,6 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     modalCancelBtn.addEventListener('click', closeWordModal);
     modalWordEl.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') confirmStart();
-    });
-
-    endBtn.addEventListener('click', () => {
-        if (!roundActive) return;
-        const nickname = getDisplayName();
-        if (!nickname) return;
-        syncProfile();
-        socket.emit('pict-end-round', { nickname });
-    });
-
-    clearBtn.addEventListener('click', () => {
-        if (!roundActive) return;
-        socket.emit('pict-clear');
     });
 
     guessBtn.addEventListener('click', sendGuess);
@@ -435,6 +519,10 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     socket.on('pict-guess-broadcast', (message) => {
         const tag = message.correct ? '✅' : '💬';
         appendGameMsg(`${tag} ${message.from}: ${message.guess}`, message.correct ? 'system' : 'remote');
+
+        if (!message.correct) {
+            appendGameMsg(`❌ ${message.from || 'Someone'} guessed wrong.`, 'system');
+        }
     });
 
     socket.on('pict-correct', ({ winnerName }) => {
@@ -443,9 +531,12 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         appendGameMsg(`🎉 ${name} guessed correctly!`, 'system');
     });
 
-    socket.on('pict-guess-feedback', ({ correct, message }) => {
+    socket.on('pict-guess-feedback', ({ correct, message, guesserId, guesserName }) => {
         if (correct) return;
-        showToast(message || 'Wrong answer, try again!');
+        const text = message || 'Wrong answer, try again!';
+        if (guesserId === socket.id) {
+            showToast(text);
+        }
     });
 
     socket.on('pict-round-ended', ({ winnerName, word, endedBy, manual, leaderboard: nextLeaderboard }) => {
