@@ -252,9 +252,12 @@ function registerPictionaryHandlers(io, socket) {
     });
 
     if (!correct) {
-      socket.emit('pict-guess-feedback', {
+      io.to(getRoomChannel(roomId)).emit('pict-guess-feedback', {
         correct: false,
+        guesserId: socket.id,
+        guesserName: getPlayerName(state, socket.id),
         message: 'Wrong answer, try again!',
+        roomId,
       });
       return;
     }
