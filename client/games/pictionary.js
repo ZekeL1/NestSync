@@ -443,6 +443,11 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         appendGameMsg(`🎉 ${name} guessed correctly!`, 'system');
     });
 
+    socket.on('pict-guess-feedback', ({ correct, message }) => {
+        if (correct) return;
+        showToast(message || 'Wrong answer, try again!');
+    });
+
     socket.on('pict-round-ended', ({ winnerName, word, endedBy, manual, leaderboard: nextLeaderboard }) => {
         leaderboard = nextLeaderboard || leaderboard;
         if (manual) {
