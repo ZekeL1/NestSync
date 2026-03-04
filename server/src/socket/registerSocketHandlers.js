@@ -68,6 +68,18 @@ function registerSocketHandlers(io) {
       socket.to(roomId).emit("user-connected", socket.id);
     });
 
+    socket.on("leave-room", (roomId) => {
+      if (!requireRole(socket, ["parent", "child"], "leave-room")) {
+        return;
+      }
+      if (!roomId || !socket.rooms.has(roomId)) {
+        return;
+      }
+      socket.leave(roomId);
+      socket.emit("room-left", roomId);
+      socket.to(roomId).emit("user-left", { id: socket.id });
+    });
+
     socket.on("sync:control", (payload) => {
       if (!requireRole(socket, ["parent"], "sync:control")) {
         return;
