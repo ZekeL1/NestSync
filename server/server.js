@@ -20,7 +20,6 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.use(bodyParser.json());
 mountApi(app);
 
-// --- API 接口: 注册与登录 ---
 app.post('/api/register', async (req, res) => {
     const result = await registerWithAuth(req.body || {});
     if (!result.ok) {
