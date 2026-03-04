@@ -911,13 +911,60 @@ const talesPageText = document.getElementById("tales-page-text");
 const talesPageIndicator = document.getElementById("tales-page-indicator");
 const talesBtnPrev = document.getElementById("tales-btn-prev");
 const talesBtnNext = document.getElementById("tales-btn-next");
+const talesBtnRead = document.getElementById("tales-btn-read");
 
 let currentTaleId = null;
 let currentTalePage = 0;
 
+function stopTaleSpeech() {
+  if (typeof window.speechSynthesis !== "undefined") {
+    window.speechSynthesis.cancel();
+  }
+  if (talesBtnRead) {
+    talesBtnRead.innerHTML = '<i class="fa-solid fa-volume-high"></i> Read Aloud';
+    talesBtnRead.classList.remove("tales-read-active");
+  }
+}
+
+function readCurrentPageAloud() {
+  if (typeof window.speechSynthesis === "undefined") {
+    showToast("Read aloud is not supported in this environment.");
+    return;
+  }
+  const tale = currentTaleId ? TALES[currentTaleId] : null;
+  if (!tale) return;
+  const page = tale.pages[currentTalePage];
+  if (!page || !page.text) return;
+
+  if (window.speechSynthesis.speaking) {
+    stopTaleSpeech();
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(page.text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.95;
+  utterance.onend = () => {
+    if (talesBtnRead) {
+      talesBtnRead.innerHTML = '<i class="fa-solid fa-volume-high"></i> Read Aloud';
+      talesBtnRead.classList.remove("tales-read-active");
+    }
+  };
+  utterance.onerror = () => {
+    stopTaleSpeech();
+  };
+
+  window.speechSynthesis.speak(utterance);
+  if (talesBtnRead) {
+    talesBtnRead.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+    talesBtnRead.classList.add("tales-read-active");
+  }
+}
+
 function openTale(storyId) {
   const tale = TALES[storyId];
   if (!tale || !talesReader || !talesReaderStoryTitle) return;
+  stopTaleSpeech();
   currentTaleId = storyId;
   currentTalePage = 0;
   talesReaderStoryTitle.textContent = tale.title;
@@ -932,6 +979,7 @@ function openTale(storyId) {
 
 function closeTale() {
   if (!talesReader) return;
+  stopTaleSpeech();
   talesReader.hidden = true;
   if (talesReader.parentElement) {
     talesReader.parentElement.classList.remove("tales-reader-open");
@@ -945,6 +993,7 @@ function renderTalePage() {
   if (!tale) return;
   const page = tale.pages[currentTalePage];
   if (!page) return;
+  stopTaleSpeech();
   if (talesPageText) talesPageText.textContent = page.text;
   if (talesPageIllustration) {
     talesPageIllustration.style.backgroundImage = page.image ? `url(${page.image})` : "none";
@@ -978,6 +1027,9 @@ if (talesBtnNext) {
       renderTalePage();
     }
   });
+}
+if (talesBtnRead) {
+  talesBtnRead.addEventListener("click", readCurrentPageAloud);
 }
 
 if (typeof window.initArcadeGames === "function") {
