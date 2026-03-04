@@ -136,6 +136,19 @@ The client is connected by default to  `http://localhost:3000`.
 
 ---
 
+## Testing
+
+Unit tests are in `server/__tests__/` and use [Jest](https://jestjs.io/). No AWS credentials or database are required—all external dependencies are mocked.
+
+```bash
+cd server
+npm test
+```
+
+This runs tests for `passwordService`, `phaseAPolicyService`, and `registerService`, and prints a coverage report. See `server/__tests__/README.md` for a full list of test cases.
+
+---
+
 ## API Overview
 
 | Method | Path | Explain |
