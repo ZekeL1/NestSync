@@ -5,6 +5,7 @@ const tabContents = document.querySelectorAll(".tab-content");
 const statusBadge = document.getElementById("status-badge");
 const inputRoomId = document.getElementById("input-room-id");
 const authOverlay = document.getElementById("auth-overlay");
+const joinRoomButton = document.getElementById("btn-join");
 
 const loginForm = document.getElementById("login-form");
 const registerForm = document.getElementById("register-form");
@@ -16,6 +17,8 @@ const showLoginLink = document.getElementById("show-login");
 const showForgotLink = document.getElementById("show-forgot");
 const backToLoginFromForgot = document.getElementById("back-to-login-from-forgot");
 const backToLoginFromReset = document.getElementById("back-to-login-from-reset");
+const skipLoginButton = document.getElementById("skip-login");
+const guestLoginButton = document.getElementById("guest-login-button");
 
 const chatInput = document.getElementById("chat-input");
 const chatMessages = document.getElementById("chat-messages");
@@ -30,6 +33,7 @@ let isRemoteControl = false;
 let lastTime = 0;
 let localStream = null;
 let peerConnection = null;
+let isIntentionalReconnect = false;
 
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
@@ -112,6 +116,38 @@ function activateTab(targetTabId) {
   if (targetContent) targetContent.classList.add("active-content");
 }
 
+function updateJoinButtonMode(inRoom) {
+  if (!joinRoomButton) return;
+  joinRoomButton.innerHTML = inRoom
+    ? '<i class="fa-solid fa-right-from-bracket"></i>'
+    : '<i class="fa-solid fa-arrow-right-to-bracket"></i>';
+  joinRoomButton.title = inRoom ? "Leave Room" : "Join";
+  joinRoomButton.classList.toggle("leave-mode", inRoom);
+}
+
+function setLobbyStatus() {
+  if (currentRoomId) return;
+  if (currentAccessToken && socket.connected) {
+    statusBadge.innerText = "Connected";
+    statusBadge.className = "status-pill online";
+    return;
+  }
+  statusBadge.innerText = "Offline";
+  statusBadge.className = "status-pill offline";
+}
+
+function setRoomConnectedState(label) {
+  statusBadge.innerText = label;
+  statusBadge.className = "status-pill online";
+  updateJoinButtonMode(true);
+}
+
+function resetRoomUi() {
+  inputRoomId.value = "";
+  updateJoinButtonMode(false);
+  setLobbyStatus();
+}
+
 let resendTimerIntervalId = null;
 
 function clearResendTimer() {
@@ -179,10 +215,13 @@ async function callFeatureEndpoint(path) {
 }
 
 function applyRoleVisibility(role) {
-  const isChild = role === "child";
-  document.getElementById("btn-create").style.display = isChild ? "none" : "flex";
-  document.getElementById("url-control-panel").style.display = isChild ? "none" : "flex";
-  document.getElementById("cam-controls").style.display = isChild ? "none" : "flex";
+  const isParent = role === "parent";
+  document.getElementById("btn-create").style.display = isParent ? "flex" : "none";
+  document.getElementById("url-control-panel").style.display = isParent ? "flex" : "none";
+  document.getElementById("cam-controls").style.display = isParent ? "flex" : "none";
+  if (guestLoginButton) {
+    guestLoginButton.style.display = role === "guest" ? "inline-flex" : "none";
+  }
 }
 
 async function loadProfileFromMe() {
@@ -225,6 +264,62 @@ function handleLoginSuccess(user, accessToken) {
   } else {
     showToast("Login succeeded but access token is missing.");
   }
+
+  setLobbyStatus();
+}
+
+function enterGuestMode() {
+  currentUser = {
+    id: null,
+    username: "guest",
+    nickname: "Guest",
+    role: "guest",
+    email: null
+  };
+  currentAccessToken = null;
+
+  authOverlay.style.display = "none";
+  document.getElementById("current-user-name").innerText = "Guest";
+  document.getElementById("current-user-role").innerText = "GUEST";
+  document.getElementById("current-user-avatar").innerText = "G";
+
+  applyRoleVisibility("guest");
+  activateTab("cinema");
+  resetRoomUi();
+  showToast("Entered guest mode. Online sync stays disabled until you log in.");
+}
+
+function reopenLogin() {
+  authOverlay.style.display = "flex";
+  showOnlyForm("login");
+}
+
+function cleanupRoomSession() {
+  currentRoomId = null;
+  resetRoomUi();
+  if (remoteVideo) remoteVideo.srcObject = null;
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+}
+
+function leaveCurrentRoom() {
+  const roomId = currentRoomId;
+  if (!roomId) return;
+
+  cleanupRoomSession();
+
+  if (socket.connected) {
+    isIntentionalReconnect = true;
+    socket.emit("leave-room", roomId);
+    socket.disconnect();
+    if (currentAccessToken) {
+      socket.connect();
+    }
+  }
+
+  showToast("Left the room.");
 }
 
 showRegisterLink.addEventListener("click", (event) => {
@@ -251,6 +346,18 @@ backToLoginFromReset.addEventListener("click", (event) => {
   event.preventDefault();
   showOnlyForm("login");
 });
+
+if (skipLoginButton) {
+  skipLoginButton.addEventListener("click", () => {
+    enterGuestMode();
+  });
+}
+
+if (guestLoginButton) {
+  guestLoginButton.addEventListener("click", () => {
+    reopenLogin();
+  });
+}
 
 const btnResendCode = document.getElementById("btn-resend-code");
 if (btnResendCode) {
@@ -447,12 +554,12 @@ navLinks.forEach((link) => {
     const targetTab = link.getAttribute("data-tab");
 
     try {
-      if (targetTab === "games") {
+      if (targetTab === "games" && currentAccessToken) {
         const result = await callFeatureEndpoint("/features/open-games");
         if (result.message) showToast(result.message);
       }
 
-      if (targetTab === "tales") {
+      if (targetTab === "tales" && currentAccessToken) {
         const result = await callFeatureEndpoint("/features/open-fairy-tales");
         if (result.message) showToast(result.message);
       }
@@ -466,7 +573,21 @@ navLinks.forEach((link) => {
 });
 
 socket.on("connect_error", (error) => {
+  isIntentionalReconnect = false;
+  setLobbyStatus();
   showToast(`Socket authentication failed: ${error.message}`);
+});
+
+socket.on("connect", () => {
+  isIntentionalReconnect = false;
+  setLobbyStatus();
+});
+
+socket.on("disconnect", () => {
+  if (isIntentionalReconnect && currentAccessToken) {
+    return;
+  }
+  setLobbyStatus();
 });
 
 socket.on("server:error", (payload) => {
@@ -476,18 +597,20 @@ socket.on("server:error", (payload) => {
 
 socket.on("room-created", (roomId) => {
   currentRoomId = roomId;
-  statusBadge.innerText = "Host";
-  statusBadge.className = "status-pill online";
   inputRoomId.value = roomId;
+  setRoomConnectedState("Host");
   showToast(`Room created: ${roomId}`);
 });
 
 socket.on("room-joined", (roomId) => {
   currentRoomId = roomId;
-  statusBadge.innerText = "Connected";
-  statusBadge.className = "status-pill online";
   inputRoomId.value = roomId;
+  setRoomConnectedState("Connected");
   showToast(`Joined room: ${roomId}`);
+});
+
+socket.on("room-left", () => {
+  cleanupRoomSession();
 });
 
 socket.on("user-left", () => {
@@ -508,11 +631,18 @@ document.getElementById("btn-create").addEventListener("click", async () => {
   }
 });
 
-document.getElementById("btn-join").addEventListener("click", () => {
-  const roomId = inputRoomId.value.trim();
-  if (!roomId) return;
-  socket.emit("join-room", roomId);
-});
+if (joinRoomButton) {
+  joinRoomButton.addEventListener("click", () => {
+    if (currentRoomId) {
+      leaveCurrentRoom();
+      return;
+    }
+
+    const roomId = inputRoomId.value.trim();
+    if (!roomId) return;
+    socket.emit("join-room", roomId);
+  });
+}
 
 function appendMessage(text, type, senderName = "") {
   const div = document.createElement("div");
