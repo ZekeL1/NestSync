@@ -1,7 +1,7 @@
 :root {
-    --primary-color: #6c5ce7;       /* 温馨的紫色 (Warm Purple) */
+    --primary-color: #6c5ce7;     
     --secondary-color: #a29bfe;
-    --bg-color: #f5f6fa;            /* 柔和背景灰 (Soft Gray) */
+    --bg-color: #f5f6fa;            
     --sidebar-bg: #ffffff;
     --text-color: #2d3436;
     --active-bg: #e0e6ed;
@@ -19,7 +19,7 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    overflow: hidden; /* 防止滚动条 (Prevent scrollbars) */
+    overflow: hidden; 
 }
 
 .app-container {
@@ -27,7 +27,6 @@ body {
     height: 100vh;
 }
 
-/* Sidebar Styling */
 .sidebar {
     width: 250px;
     background-color: var(--sidebar-bg);
@@ -104,12 +103,12 @@ body {
 }
 
 .tab-content {
-    display: none; /* 默认隐藏 (Hidden by default) */
+    display: none; 
     animation: fadeIn 0.4s ease;
 }
 
 .tab-content.active-content {
-    display: block; /* 激活时显示 (Show when active) */
+    display: block; 
 }
 
 @keyframes fadeIn {
@@ -127,7 +126,6 @@ body {
     margin-bottom: 30px;
 }
 
-/* Cinema Specific Styles */
 .video-placeholder {
     background: white;
     border-radius: var(--radius);
