@@ -14,10 +14,10 @@ function createWindow() {
         minWidth: 1100, 
         minHeight: 750,
         title: "NestSync",
-        titleBarStyle: 'hiddenInset', // 隐藏标题栏
+        titleBarStyle: 'hiddenInset', 
         trafficLightPosition: { x: 20, y: 20 }, 
-        backgroundColor: '#00000000', // 透明背景
-        vibrancy: 'under-window', // macOS 磨砂效果
+        backgroundColor: '#00000000', 
+        vibrancy: 'under-window', 
         visualEffectState: 'active',
         webPreferences: {
             nodeIntegration: true,

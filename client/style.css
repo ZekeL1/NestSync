@@ -22,7 +22,7 @@ body {
     color: var(--text-main); position: relative;
 }
 
-/* 顶部全局拖拽条（登录前后都能拖动窗口） */
+
 .window-drag-bar {
     position: fixed;
     top: 0;
@@ -35,13 +35,12 @@ body {
     background: transparent;
 }
 
-/* 动态背景光斑 */
+
 .bg-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6; z-index: -1; animation: floatBlob 10s infinite alternate ease-in-out; }
 .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #a29bfe; }
 .blob-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #74b9ff; animation-delay: -5s; }
 @keyframes floatBlob { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 40px); } }
 
-/* 🌟 Toast 顶部提示 */
 #toast-container {
     position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
     z-index: 10000; display: flex; flex-direction: column; gap: 10px;
@@ -111,15 +110,14 @@ body {
 .tab-content.active-content { display: flex; flex-direction: column; gap: 20px; animation: fadeIn 0.5s ease; height: 100%; }
 @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-/* 🌟 Video Container (弹性高度) */
 .cinema-container { 
-    width: 100%; flex: 1; /* 自动填满剩余空间 */
+    width: 100%; flex: 1; 
     background: black; border-radius: 28px; 
     position: relative; overflow: hidden; 
     box-shadow: 0 20px 50px rgba(0,0,0,0.25); 
 }
 
-/* 🌟 Empty State (修复图标重叠) */
+
 .empty-state { 
     position: absolute; inset: 0; 
     display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -132,10 +130,9 @@ body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
-/* 🌟 强制隐藏所有伪元素，彻底解决重叠 */
+
 .empty-state::before, .empty-state::after { display: none !important; }
 
-/* 🌟 URL Input Bar (底部独立栏) */
 .url-input-wrapper {
     background: white; padding: 10px 10px 10px 24px; border-radius: 20px;
     display: flex; align-items: center; gap: 12px;
@@ -150,13 +147,11 @@ body {
 .camera-panel { width: 320px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .panel-header { font-size: 0.85rem; font-weight: 800; color: rgba(0,0,0,0.4); letter-spacing: 1.5px; text-transform: uppercase; }
 
-/* 摄像头区域 (限制高度给聊天) */
 .cam-wrapper { display: flex; flex-direction: column; gap: 12px; height: 45%; flex-shrink: 0; }
 .cam-card { width: 100%; flex: 1; background: #1e272e; border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.3); }
 .cam-card video { width: 100%; height: 100%; object-fit: cover; }
 .cam-tag { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
 
-/* 🌟 控制按钮 (高层级，可点击) */
 .local-controls { 
     position: absolute; bottom: 12px; width: 100%; 
     display: flex; justify-content: center; gap: 12px; 
@@ -166,7 +161,6 @@ body {
 .icon-btn-sm { width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.25); backdrop-filter: blur(8px); color: white; cursor: pointer; transition: 0.2s; pointer-events: auto; }
 .icon-btn-sm:hover { background: white; color: black; transform: scale(1.1); }
 
-/* 🌟 Chat Module */
 .chat-wrapper { flex: 1; background: rgba(255,255,255,0.4); border-radius: 24px; border: 1px solid rgba(255,255,255,0.6); display: flex; flex-direction: column; overflow: hidden; padding: 12px; margin-top: 5px; }
 .chat-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 10px; font-size: 0.9rem; }
 .chat-messages::-webkit-scrollbar { width: 0px; background: transparent; }
@@ -174,14 +168,11 @@ body {
 .chat-msg { padding: 8px 12px; border-radius: 12px; max-width: 90%; word-wrap: break-word; line-height: 1.4; animation: slideUp 0.2s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* 对方消息 */
 .chat-msg.remote { align-self: flex-start; background: white; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 .chat-msg.remote strong { color: var(--primary-color); font-size: 0.75rem; display: block; margin-bottom: 2px; }
 
-/* 自己消息 */
 .chat-msg.local { align-self: flex-end; background: var(--primary-color); color: white; border-bottom-right-radius: 4px; box-shadow: 0 4px 10px var(--primary-glow); }
 
-/* 系统消息 */
 .chat-msg.system { align-self: center; font-size: 0.8rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 4px 10px; border-radius: 20px; }
 
 .chat-input-area { display: flex; gap: 8px; margin-top: 5px; }
@@ -189,7 +180,6 @@ body {
 #btn-send-chat { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); color: white; border: none; cursor: pointer; transition: 0.2s; }
 #btn-send-chat:hover { transform: scale(1.1); }
 
-/* Login Overlay */
 .auth-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(40px); display: flex; align-items: center; justify-content: center; -webkit-app-region: drag; }
 .auth-box { width: 440px; padding: 48px; background: rgba(255,255,255,0.75); border: 1px solid white; border-radius: 40px; box-shadow: 0 30px 80px rgba(0,0,0,0.15); text-align: center; position: relative; overflow: hidden; -webkit-app-region: no-drag; }
 .auth-input { width: 100%; padding: 16px 20px; margin-bottom: 16px; border: 2px solid transparent; background: rgba(255,255,255,0.5); border-radius: 16px; font-size: 1rem; transition: 0.3s; color: var(--text-main); font-weight: 500; }
