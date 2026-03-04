@@ -4,13 +4,16 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --coverage --coverageReporters=text",
     "start": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.884.0",
     "body-parser": "^2.2.2",
