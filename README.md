@@ -45,7 +45,8 @@ NestSync/
 │   ├── package.json
 │   └── games/              # Game frontend
 │       ├── index.js        # Arcade interface
-│       └── pictionary.js   # Pictionary "you draw, I guess"
+│       ├── pictionary.js   # Pictionary "you draw, I guess"
+│       └── sudoku.js       # Collaborative Sudoku
 ├── server/                 # Express backend
 │   ├── server.js           # Main entrance（API + Socket.io）
 │   ├── db.js               # MySQL connection
@@ -53,7 +54,8 @@ NestSync/
 │   ├── package.json
 │   ├── games/              # Game backend logic
 │   │   ├── index.js
-│   │   └── pictionary.js   # Pictionary Socket
+│   │   ├── pictionary.js   # Pictionary Socket
+│   │   └── sudoku.js       # Sudoku Socket
 │   └── src/                # Modular services (such as Cognito, etc)
 │       ├── config.js
 │       ├── auth/           # Cognito, JWT, etc
