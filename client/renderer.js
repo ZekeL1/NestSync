@@ -912,6 +912,9 @@ const talesPageIndicator = document.getElementById("tales-page-indicator");
 const talesBtnPrev = document.getElementById("tales-btn-prev");
 const talesBtnNext = document.getElementById("tales-btn-next");
 const talesBtnRead = document.getElementById("tales-btn-read");
+const talesSwitchButtons = document.querySelectorAll(".tales-switch-btn");
+const talesPaneLibrary = document.getElementById("tales-pane-library");
+const talesPaneAi = document.getElementById("tales-pane-ai");
 
 let currentTaleId = null;
 let currentTalePage = 0;
@@ -988,6 +991,28 @@ function closeTale() {
   currentTalePage = 0;
 }
 
+function switchTalesPane(targetPane) {
+  const showLibrary = targetPane !== "ai";
+  if (talesPaneLibrary) {
+    talesPaneLibrary.classList.toggle("is-active", showLibrary);
+    talesPaneLibrary.hidden = !showLibrary;
+  }
+  if (talesPaneAi) {
+    talesPaneAi.classList.toggle("is-active", !showLibrary);
+    talesPaneAi.hidden = showLibrary;
+  }
+
+  talesSwitchButtons.forEach((button) => {
+    const isActive = button.getAttribute("data-tales-pane") === (showLibrary ? "library" : "ai");
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  if (!showLibrary) {
+    closeTale();
+  }
+}
+
 function renderTalePage() {
   const tale = currentTaleId ? TALES[currentTaleId] : null;
   if (!tale) return;
@@ -1030,6 +1055,14 @@ if (talesBtnNext) {
 }
 if (talesBtnRead) {
   talesBtnRead.addEventListener("click", readCurrentPageAloud);
+}
+if (talesSwitchButtons.length) {
+  talesSwitchButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      switchTalesPane(button.getAttribute("data-tales-pane"));
+    });
+  });
+  switchTalesPane("library");
 }
 
 if (typeof window.initArcadeGames === "function") {
