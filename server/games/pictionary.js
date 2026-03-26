@@ -168,8 +168,14 @@ function registerPictionaryHandlers(io, socket) {
     leavePictRoom(io, socket);
   });
 
-  socket.on('join-room', (roomId) => {
-    const targetRoomId = sanitizeWord(roomId, 24);
+  socket.on('join-room', (payload) => {
+    const rawId =
+      typeof payload === 'string'
+        ? payload
+        : payload && payload.roomId
+          ? payload.roomId
+          : '';
+    const targetRoomId = sanitizeWord(rawId, 24);
     const currentRoomId = getSocketRoomId(socket);
     if (currentRoomId && currentRoomId !== targetRoomId) {
       leavePictRoom(io, socket);
