@@ -23,6 +23,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     let timerStartedAt = null;
     let timerIntervalId = null;
     let activeRoomId = getJoinedRoomId();
+    let playerScore = 0;
+    let roundNumber = 0;
+    let cellOutcome = Array(81).fill('empty');
 
     const socketListeners = {
         connect: () => {
@@ -36,6 +39,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         'room-created': () => {
             const nextRoomId = getJoinedRoomId();
             if (nextRoomId && nextRoomId !== activeRoomId) {
+                resetRoomProgress();
                 resetLocalGameState();
             }
             activeRoomId = nextRoomId;
@@ -45,6 +49,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         'room-joined': () => {
             const nextRoomId = getJoinedRoomId();
             if (nextRoomId && nextRoomId !== activeRoomId) {
+                resetRoomProgress();
                 resetLocalGameState();
             }
             activeRoomId = nextRoomId;
@@ -53,6 +58,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         },
         'room-left': () => {
             activeRoomId = null;
+            resetRoomProgress();
             resetLocalGameState();
             refreshStartAvailability();
             renderMeta();
@@ -208,10 +214,17 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         values = nextBoard.puzzle.slice();
         fixed = nextBoard.puzzle.map((value) => value !== 0);
         errors = new Set();
+        cellOutcome = Array(81).fill('empty');
         started = true;
         completed = false;
+        roundNumber += 1;
         selectedIndex = getFirstEditableIndex();
         startTimer();
+    }
+
+    function resetRoomProgress() {
+        playerScore = 0;
+        roundNumber = 0;
     }
 
     function resetLocalGameState() {
@@ -224,10 +237,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         values = Array(81).fill(0);
         fixed = Array(81).fill(false);
         errors = new Set();
+        cellOutcome = Array(81).fill('empty');
         setStartedUI(false);
         renderBoard();
         renderMeta();
         renderKeypad();
+        renderLeaderboard();
     }
 
     function setStartedUI(active) {
@@ -335,12 +350,31 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const nextValue = rawValue ? Number(rawValue) : 0;
         if (nextValue < 0 || nextValue > 9 || Number.isNaN(nextValue)) return;
 
+        const previousValue = values[selectedIndex];
+        if (previousValue === nextValue) return;
+
         values[selectedIndex] = nextValue;
         recomputeErrors();
+
+        const nextOutcome = nextValue === 0
+            ? 'empty'
+            : (nextValue === solution[selectedIndex] ? 'correct' : 'incorrect');
+        const previousOutcome = cellOutcome[selectedIndex];
+
+        if (nextOutcome !== previousOutcome) {
+            if (nextOutcome === 'correct') {
+                playerScore += 2;
+            } else if (nextOutcome === 'incorrect') {
+                playerScore -= 1;
+            }
+        }
+
+        cellOutcome[selectedIndex] = nextOutcome;
         updateCompletionState();
         renderBoard();
         renderMeta();
         renderKeypad();
+        renderLeaderboard();
     }
 
     function moveSelection(rowOffset, colOffset) {
@@ -569,6 +603,40 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
     }
 
+    function renderLeaderboard() {
+        const containers = gamesRoot.querySelectorAll('[data-sudoku-scoreboard]');
+        if (!containers.length) return;
+
+        const rows = [
+            {
+                name: getDisplayName(),
+                score: playerScore,
+            },
+        ];
+
+        containers.forEach((container) => {
+            container.innerHTML = '';
+
+            rows.forEach((row, index) => {
+                const item = document.createElement('div');
+                item.style.display = 'flex';
+                item.style.justifyContent = 'space-between';
+                item.style.gap = '8px';
+                item.style.padding = '3px 0';
+
+                const left = document.createElement('span');
+                left.textContent = `#${index + 1} ${row.name}`;
+
+                const right = document.createElement('strong');
+                right.textContent = String(row.score);
+
+                item.appendChild(left);
+                item.appendChild(right);
+                container.appendChild(item);
+            });
+        });
+    }
+
     function renderMeta() {
         const statusEl = gamesRoot.querySelector('#sudoku-status');
         const timerEl = gamesRoot.querySelector('#sudoku-timer');
@@ -578,6 +646,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const mistakesEl = gamesRoot.querySelector('#sudoku-mistakes-value');
         const hintEl = gamesRoot.querySelector('#sudoku-hint');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
+        const roundEl = gamesRoot.querySelector('#sudoku-round-value');
+        const scoreEl = gamesRoot.querySelector('#sudoku-score-value');
 
         if (statusEl) {
             statusEl.textContent = getStatusLabel();
@@ -606,6 +676,14 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (mistakesEl) {
             mistakesEl.textContent = String(errors.size);
+        }
+
+        if (roundEl) {
+            roundEl.textContent = started ? `Round ${roundNumber}` : (roundNumber > 0 ? `Round ${roundNumber}` : '-');
+        }
+
+        if (scoreEl) {
+            scoreEl.textContent = String(playerScore);
         }
 
         if (hintEl) {
@@ -662,11 +740,20 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                     <span style="opacity:.75;">Difficulty</span>
                     <strong data-sudoku-difficulty>Medium</strong>
                   </div>
+                  <div style="display:flex; justify-content:space-between; gap:8px;">
+                    <span style="opacity:.75;">Score</span>
+                    <strong id="sudoku-score-value">0</strong>
+                  </div>
                   <div style="display:flex; justify-content:center; margin-top:12px;">
                     <button id="sudoku-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;">
                       <i class="fa-solid fa-play" style="font-size:1rem;"></i> Start
                     </button>
                   </div>
+                </div>
+
+                <div class="glass-panel" style="padding:14px; margin-bottom:14px; text-align:left;">
+                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+                  <div data-sudoku-scoreboard style="max-height:160px; overflow:auto;">-</div>
                 </div>
 
                 <div class="glass-panel" style="padding:14px; text-align:left;">
@@ -708,6 +795,10 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 <div class="glass-panel" style="padding:14px;">
                   <div style="font-weight:800; margin-bottom:8px;">Puzzle Stats</div>
                   <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                    <span style="opacity:.75;">Round</span>
+                    <strong id="sudoku-round-value">-</strong>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
                     <span style="opacity:.75;">Difficulty</span>
                     <strong data-sudoku-difficulty>Medium</strong>
                   </div>
@@ -719,6 +810,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                     <span style="opacity:.75;">Mistakes</span>
                     <strong id="sudoku-mistakes-value">0</strong>
                   </div>
+                </div>
+
+                <div class="glass-panel" style="padding:14px;">
+                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+                  <div data-sudoku-scoreboard style="max-height:140px; overflow:auto;">-</div>
                 </div>
 
                 <div class="glass-panel" style="padding:14px;">
@@ -767,6 +863,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         refreshStartAvailability();
         renderBoard();
         renderKeypad();
+        renderLeaderboard();
         renderMeta();
     }
 
