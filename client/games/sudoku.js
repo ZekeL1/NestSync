@@ -22,6 +22,42 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     let timerSeconds = 0;
     let timerStartedAt = null;
     let timerIntervalId = null;
+    let activeRoomId = getJoinedRoomId();
+
+    const socketListeners = {
+        connect: () => {
+            refreshStartAvailability();
+            renderMeta();
+        },
+        disconnect: () => {
+            refreshStartAvailability();
+            renderMeta();
+        },
+        'room-created': () => {
+            const nextRoomId = getJoinedRoomId();
+            if (nextRoomId && nextRoomId !== activeRoomId) {
+                resetLocalGameState();
+            }
+            activeRoomId = nextRoomId;
+            refreshStartAvailability();
+            renderMeta();
+        },
+        'room-joined': () => {
+            const nextRoomId = getJoinedRoomId();
+            if (nextRoomId && nextRoomId !== activeRoomId) {
+                resetLocalGameState();
+            }
+            activeRoomId = nextRoomId;
+            refreshStartAvailability();
+            renderMeta();
+        },
+        'room-left': () => {
+            activeRoomId = null;
+            resetLocalGameState();
+            refreshStartAvailability();
+            renderMeta();
+        },
+    };
 
     function cleanup() {
         if (timerIntervalId) {
@@ -29,6 +65,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             timerIntervalId = null;
         }
         window.removeEventListener('keydown', onWindowKeyDown);
+        if (socket && typeof socket.off === 'function') {
+            Object.entries(socketListeners).forEach(([eventName, handler]) => {
+                socket.off(eventName, handler);
+            });
+        }
         if (window.cleanupSudokuGame === cleanup) {
             delete window.cleanupSudokuGame;
         }
@@ -173,8 +214,71 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         startTimer();
     }
 
+    function resetLocalGameState() {
+        stopTimer();
+        started = false;
+        completed = false;
+        selectedIndex = null;
+        puzzle = Array(81).fill(0);
+        solution = Array(81).fill(0);
+        values = Array(81).fill(0);
+        fixed = Array(81).fill(false);
+        errors = new Set();
+        setStartedUI(false);
+        renderBoard();
+        renderMeta();
+        renderKeypad();
+    }
+
+    function setStartedUI(active) {
+        const waitingEl = gamesRoot.querySelector('#sudoku-waiting');
+        const liveAreaEl = gamesRoot.querySelector('#sudoku-live-area');
+        const nextBtn = gamesRoot.querySelector('#sudoku-next');
+
+        if (waitingEl) {
+            waitingEl.style.display = active ? 'none' : 'flex';
+        }
+
+        if (liveAreaEl) {
+            liveAreaEl.style.display = active ? 'flex' : 'none';
+        }
+
+        if (nextBtn) {
+            nextBtn.style.display = active ? 'flex' : 'none';
+            nextBtn.style.opacity = active ? '1' : '.7';
+        }
+    }
+
+    function refreshStartAvailability(notify = false) {
+        const joined = !!getJoinedRoomId();
+        const waitStartBtn = gamesRoot.querySelector('#sudoku-wait-start');
+        const waitHintEl = gamesRoot.querySelector('#sudoku-wait-hint');
+
+        if (waitStartBtn) {
+            waitStartBtn.disabled = !joined;
+            waitStartBtn.style.opacity = joined ? '1' : '.55';
+            waitStartBtn.style.cursor = joined ? 'pointer' : 'not-allowed';
+        }
+
+        if (waitHintEl) {
+            waitHintEl.innerText = joined
+                ? 'Choose a difficulty and click Start to begin.'
+                : 'Please join a room first.';
+        }
+
+        if (notify && !joined) {
+            showToast('Please join a room first');
+        }
+    }
+
     function handleStart() {
+        if (!getJoinedRoomId()) {
+            refreshStartAvailability(true);
+            return;
+        }
+
         resetBoardState(selectedDifficulty);
+        setStartedUI(true);
         renderBoard();
         renderMeta();
         renderKeypad();
@@ -182,6 +286,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     }
 
     function handleNextPuzzle() {
+        if (!getJoinedRoomId()) {
+            refreshStartAvailability(true);
+            return;
+        }
+
         if (!started) {
             handleStart();
             return;
@@ -465,7 +574,6 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const timerEl = gamesRoot.querySelector('#sudoku-timer');
         const roomEl = gamesRoot.querySelector('#sudoku-room-value');
         const playerEl = gamesRoot.querySelector('#sudoku-player-value');
-        const difficultyEl = gamesRoot.querySelector('#sudoku-selected-difficulty');
         const filledEl = gamesRoot.querySelector('#sudoku-filled-value');
         const mistakesEl = gamesRoot.querySelector('#sudoku-mistakes-value');
         const hintEl = gamesRoot.querySelector('#sudoku-hint');
@@ -488,9 +596,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             playerEl.textContent = getDisplayName();
         }
 
-        if (difficultyEl) {
-            difficultyEl.textContent = selectedDifficulty;
-        }
+        gamesRoot.querySelectorAll('[data-sudoku-difficulty]').forEach((element) => {
+            element.textContent = selectedDifficulty;
+        });
 
         if (filledEl) {
             filledEl.textContent = `${values.filter(Boolean).length} / 81`;
@@ -535,43 +643,13 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               </button>
             </div>
 
-            <div style="display:flex; gap:16px; height:calc(100% - 58px); min-height:0;">
-              <div style="flex:1; min-width:520px; display:flex; flex-direction:column; gap:12px; min-height:0;">
-                <div class="glass-panel" style="padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <span style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Difficulty</span>
-                    <div id="sudoku-difficulty-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
-                  </div>
+            <div id="sudoku-waiting" class="glass-panel" style="height:calc(100% - 58px); display:flex; align-items:center; justify-content:center; text-align:center;">
+              <div style="width:min(560px, 92%);">
+                <div style="font-size:40px; margin-bottom:8px; color:#6c5ce7;"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting for puzzle to start...</div>
+                <div id="sudoku-wait-hint" style="opacity:.75; margin-bottom:14px;">Please join a room first.</div>
 
-                  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                    <div class="glass-panel" style="height:44px; padding:0 14px; display:flex; align-items:center; gap:8px; border-radius:14px;">
-                      <i class="fa-regular fa-clock" style="color:#6c5ce7;"></i>
-                      <strong id="sudoku-timer">00:00</strong>
-                    </div>
-                    <button id="sudoku-start" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;">
-                      <i class="fa-solid fa-play"></i> Start
-                    </button>
-                    <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
-                      <i class="fa-solid fa-forward"></i> Next Puzzle
-                    </button>
-                  </div>
-                </div>
-
-                <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
-                  <div class="glass-panel" style="width:min(100%, 700px); aspect-ratio:1; padding:14px; display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                      <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Interactive Board</div>
-                      <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Pick a difficulty and press Start to generate a random puzzle.</div>
-                    </div>
-
-                    <div id="sudoku-board" style="flex:1; display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div style="width:360px; display:flex; flex-direction:column; gap:12px;">
-                <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:8px;">Game Info</div>
+                <div class="glass-panel" style="padding:14px; margin-bottom:14px; text-align:left;">
                   <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
                     <span style="opacity:.75;">Player</span>
                     <strong id="sudoku-player-value">-</strong>
@@ -582,7 +660,56 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   </div>
                   <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
                     <span style="opacity:.75;">Difficulty</span>
-                    <strong id="sudoku-selected-difficulty">Medium</strong>
+                    <strong data-sudoku-difficulty>Medium</strong>
+                  </div>
+                  <div style="display:flex; justify-content:center; margin-top:12px;">
+                    <button id="sudoku-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;">
+                      <i class="fa-solid fa-play" style="font-size:1rem;"></i> Start
+                    </button>
+                  </div>
+                </div>
+
+                <div class="glass-panel" style="padding:14px; text-align:left;">
+                  <div style="font-weight:800; margin-bottom:10px;">Difficulty</div>
+                  <div id="sudoku-difficulty-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px);">
+              <div style="flex:1; min-width:520px; display:flex; flex-direction:column; gap:12px; min-height:0;">
+                <div class="glass-panel" style="padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                  <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Interactive Board</div>
+
+                  <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <div class="glass-panel" style="height:44px; padding:0 14px; display:flex; align-items:center; gap:8px; border-radius:14px;">
+                      <i class="fa-regular fa-clock" style="color:#6c5ce7;"></i>
+                      <strong id="sudoku-timer">00:00</strong>
+                    </div>
+                    <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
+                      <i class="fa-solid fa-forward"></i> Next Puzzle
+                    </button>
+                  </div>
+                </div>
+
+                <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
+                  <div class="glass-panel" style="width:min(100%, 700px); aspect-ratio:1; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                      <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Shared Puzzle Surface</div>
+                      <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Pick a difficulty and press Start to generate a random puzzle.</div>
+                    </div>
+
+                    <div id="sudoku-board" style="flex:1; display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="width:360px; display:flex; flex-direction:column; gap:12px;">
+                <div class="glass-panel" style="padding:14px;">
+                  <div style="font-weight:800; margin-bottom:8px;">Puzzle Stats</div>
+                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                    <span style="opacity:.75;">Difficulty</span>
+                    <strong data-sudoku-difficulty>Medium</strong>
                   </div>
                   <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
                     <span style="opacity:.75;">Filled</span>
@@ -616,7 +743,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         `;
 
         const backBtn = gamesRoot.querySelector('#sudoku-back');
-        const startBtn = gamesRoot.querySelector('#sudoku-start');
+        const waitStartBtn = gamesRoot.querySelector('#sudoku-wait-start');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
 
         if (backBtn) {
@@ -627,8 +754,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             });
         }
 
-        if (startBtn) {
-            startBtn.addEventListener('click', handleStart);
+        if (waitStartBtn) {
+            waitStartBtn.addEventListener('click', handleStart);
         }
 
         if (nextBtn) {
@@ -636,6 +763,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         renderDifficultyButtons();
+        setStartedUI(false);
+        refreshStartAvailability();
         renderBoard();
         renderKeypad();
         renderMeta();
@@ -643,6 +772,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
     renderShell();
     window.addEventListener('keydown', onWindowKeyDown);
+    if (socket && typeof socket.on === 'function') {
+        Object.entries(socketListeners).forEach(([eventName, handler]) => {
+            socket.on(eventName, handler);
+        });
+    }
 }
 
 window.mountSudokuGame = mountSudokuGame;
