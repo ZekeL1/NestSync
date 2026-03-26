@@ -166,6 +166,22 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         return user && user.id ? String(user.id) : (socket ? socket.id : null);
     }
 
+    function findCurrentLeaderboardEntry() {
+        const playerKey = getCurrentPlayerKey();
+        const displayName = getDisplayName();
+        const user = getCurrentUser ? getCurrentUser() : null;
+        const username = user && user.username ? String(user.username) : '';
+
+        return leaderboard.find((item) => (
+            item &&
+            (
+                item.id === playerKey ||
+                item.name === displayName ||
+                (!!username && item.name === username)
+            )
+        )) || null;
+    }
+
     function getJoinedRoomId() {
         const roomId = getCurrentRoomId ? getCurrentRoomId() : null;
         return roomId ? roomId.trim() : null;
@@ -710,6 +726,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         containers.forEach((container) => {
             container.innerHTML = '';
+            const currentEntry = findCurrentLeaderboardEntry();
 
             if (!leaderboard.length) {
                 container.textContent = '-';
@@ -724,7 +741,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 item.style.padding = '3px 0';
 
                 const left = document.createElement('span');
-                left.textContent = `#${index + 1} ${row.id === getCurrentPlayerKey() ? 'You' : (row.name || 'Guest')}`;
+                const isSelf = !!currentEntry && (
+                    row.id === currentEntry.id ||
+                    row.name === currentEntry.name
+                );
+                left.textContent = `#${index + 1} ${isSelf ? 'You' : (row.name || 'Guest')}`;
 
                 const right = document.createElement('strong');
                 right.textContent = String(row.score || 0);
@@ -784,7 +805,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         if (scoreEl) {
-            const me = leaderboard.find((item) => item.id === getCurrentPlayerKey());
+            const me = findCurrentLeaderboardEntry();
             scoreEl.textContent = String(me ? Number(me.score || 0) : 0);
         }
 
