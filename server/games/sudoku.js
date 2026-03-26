@@ -326,6 +326,14 @@ function broadcastRoomStateIfActive(io, roomId) {
   emitStateToRoom(io, cleanRoomId, ROOM_STATES.get(cleanRoomId));
 }
 
+function resetSudokuScores(io, roomId, state) {
+  Object.keys(state.scores).forEach((playerId) => {
+    state.scores[playerId] = 0;
+  });
+
+  emitStateToRoom(io, roomId, state);
+}
+
 function registerSudokuHandlers(io, socket) {
   emitEmptyState(socket);
 
@@ -466,6 +474,17 @@ function registerSudokuHandlers(io, socket) {
       endedBy,
     });
     emitStateToRoom(io, roomId, state);
+  });
+
+  socket.on('sudoku-reset-scores', () => {
+    const roomId = getSocketRoomId(socket);
+    if (!roomId) {
+      socket.emit('sudoku-error', { message: 'Please join the room first' });
+      return;
+    }
+
+    const state = getState(roomId);
+    resetSudokuScores(io, roomId, state);
   });
 
   socket.on('disconnecting', () => {

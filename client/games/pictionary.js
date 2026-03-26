@@ -29,7 +29,12 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
                             <button id="pict-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;"><i class="fa-solid fa-play" style="font-size:1rem;"></i> Start</button>
             </div>
             <div class="glass-panel" style="padding:10px; text-align:left;">
-              <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                <div style="font-weight:800;">Leaderboard</div>
+                <button id="pict-reset-scores" class="btn-icon" title="Reset Scores">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+              </div>
               <div id="pict-wait-scores" style="max-height:170px; overflow:auto;">-</div>
             </div>
           </div>
@@ -101,6 +106,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const nextBtn = document.getElementById('pict-next');
     const endBtn = document.getElementById('pict-end');
     const backBtn = document.getElementById('pict-back');
+    const resetScoresBtn = document.getElementById('pict-reset-scores');
 
     const waitingEl = document.getElementById('pict-waiting');
     const liveAreaEl = document.getElementById('pict-live-area');
@@ -489,6 +495,43 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         backBtn.addEventListener('click', () => {
             if (typeof window.initArcadeGames !== 'function') return;
             window.initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId });
+        });
+    }
+
+    if (resetScoresBtn) {
+        resetScoresBtn.addEventListener('click', () => {
+            const roomId = getJoinedRoomId();
+            const nickname = getDisplayName();
+            const icon = resetScoresBtn.querySelector('i');
+
+            if (!roomId) {
+                showToast('Please join a room first');
+                return;
+            }
+
+            if (!nickname) {
+                showToast('Please log in before resetting scores');
+                return;
+            }
+
+            resetScoresBtn.disabled = true;
+            resetScoresBtn.style.opacity = '.7';
+
+            if (icon) {
+                icon.style.transition = 'transform .35s ease';
+                icon.style.transform = 'rotate(180deg)';
+            }
+
+            syncProfile();
+            socket.emit('pict-reset-scores');
+
+            setTimeout(() => {
+                resetScoresBtn.disabled = false;
+                resetScoresBtn.style.opacity = '1';
+                if (icon) {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }, 450);
         });
     }
 
