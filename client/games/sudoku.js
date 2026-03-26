@@ -628,7 +628,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   ${rowEdge}
                   background:${background};
                   color:${textColor};
-                  font-size:1.35rem;
+                  font-size:var(--sudoku-cell-size, 1.35rem);
                   font-weight:${fontWeight};
                   cursor:pointer;
                   transition:.15s;
@@ -652,25 +652,20 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     function syncBoardSize() {
         const boardEl = gamesRoot.querySelector('#sudoku-board');
         const boardStageEl = gamesRoot.querySelector('#sudoku-board-stage');
-        const boardPanelEl = gamesRoot.querySelector('#sudoku-board-panel');
-
-        if (!boardEl || !boardStageEl || !boardPanelEl) return;
+        
+        if (!boardEl || !boardStageEl) return;
         if (boardStageEl.offsetParent === null) return;
 
-        const stageRect = boardStageEl.getBoundingClientRect();
-        const panelRect = boardPanelEl.getBoundingClientRect();
-
-        const horizontalPadding = Math.max(0, panelRect.width - boardStageEl.clientWidth);
-        const verticalPadding = Math.max(0, panelRect.height - boardStageEl.clientHeight);
-        const reservedHeaderHeight = Math.max(54, panelRect.height - boardStageEl.clientHeight - verticalPadding);
-        const availableWidth = Math.max(180, stageRect.width);
-        const availableHeight = Math.max(180, panelRect.height - reservedHeaderHeight - 20);
-        const boardSize = Math.floor(Math.max(180, Math.min(availableWidth, availableHeight)));
+        const availableWidth = Math.max(220, boardStageEl.clientWidth);
+        const availableHeight = Math.max(220, boardStageEl.clientHeight);
+        const boardSize = Math.floor(Math.max(220, Math.min(availableWidth, availableHeight) - 6));
+        const cellFontSize = Math.max(18, Math.floor((boardSize / 9) * 0.42));
 
         boardEl.style.width = `${boardSize}px`;
         boardEl.style.height = `${boardSize}px`;
         boardEl.style.maxWidth = '100%';
         boardEl.style.maxHeight = '100%';
+        boardEl.style.setProperty('--sudoku-cell-size', `${cellFontSize}px`);
     }
 
     function renderKeypad() {
@@ -946,9 +941,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                       <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
                     </div>
 
-                    <div style="position:relative; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.5); border:2px solid rgba(108,92,231,.36); flex:1; min-height:0; padding:10px; box-sizing:border-box;">
-                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 24px rgba(108,92,231,.08);"></div>
+                    <div style="position:relative; border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(255,255,255,.66), rgba(245,240,255,.86)); border:1px solid rgba(108,92,231,.22); box-shadow:inset 0 1px 0 rgba(255,255,255,.55); flex:1; min-height:0; padding:6px; box-sizing:border-box;">
+                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:2px; box-sizing:border-box;">
+                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:16px; overflow:hidden; background:#fff; border:1px solid rgba(108,92,231,.12); box-shadow:0 16px 32px rgba(108,92,231,.10);"></div>
                       </div>
                     </div>
                 </div>
