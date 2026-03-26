@@ -297,9 +297,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     }
 
     function requestSudokuState() {
-        if (!socket || !socket.connected) return;
-        if (!syncSudokuProfile()) return;
-        socket.emit('sudoku-request-state');
+        const roomId = getJoinedRoomId();
+        const nickname = getDisplayName();
+
+        if (!socket || !socket.connected || !roomId || !nickname) return;
+
+        socket.emit('sudoku-request-state', { roomId, nickname });
     }
 
     function applyServerState(state) {
