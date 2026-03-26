@@ -118,6 +118,22 @@ function emitStateToSocket(io, socket, roomId, state) {
   socket.emit('sudoku-state', buildPublicState(io, roomId, state));
 }
 
+function emitEmptyState(socket) {
+  socket.emit('sudoku-state', {
+    roomId: null,
+    started: false,
+    difficulty: null,
+    puzzle: EMPTY_BOARD.slice(),
+    values: EMPTY_BOARD.slice(),
+    fixed: EMPTY_FIXED.slice(),
+    errors: [],
+    completed: false,
+    roundNumber: 0,
+    startedAt: null,
+    leaderboard: [],
+  });
+}
+
 function resetGameState(state, difficulty = null) {
   state.started = false;
   state.difficulty = difficulty;
@@ -159,6 +175,28 @@ function leaveSudokuRoom(io, socket) {
   delete state.scores[socket.id];
   socket.data.sudokuRoomId = null;
   cleanupRoomStateIfEmpty(io, roomId);
+}
+
+function syncSudokuMembership(io, socket, roomId, nickname) {
+  const cleanRoomId = sanitizeWord(roomId, 24);
+  if (!cleanRoomId) {
+    return { ok: false, error: 'Please join the room first' };
+  }
+
+  if (!socket.rooms.has(cleanRoomId)) {
+    return { ok: false, error: 'Please join the room first' };
+  }
+
+  const state = joinSudokuRoom(io, socket, cleanRoomId, nickname);
+  if (!state) {
+    return { ok: false, error: 'Please log in before opening Sudoku' };
+  }
+
+  return {
+    ok: true,
+    roomId: cleanRoomId,
+    state,
+  };
 }
 
 function validatePuzzlePayload(payload) {
@@ -243,30 +281,17 @@ function startRound(io, socket, payload) {
 }
 
 function registerSudokuHandlers(io, socket) {
-  socket.emit('sudoku-state', {
-    roomId: null,
-    started: false,
-    difficulty: null,
-    puzzle: EMPTY_BOARD.slice(),
-    values: EMPTY_BOARD.slice(),
-    fixed: EMPTY_FIXED.slice(),
-    errors: [],
-    completed: false,
-    roundNumber: 0,
-    startedAt: null,
-    leaderboard: [],
-  });
+  emitEmptyState(socket);
 
   socket.on('sudoku-set-profile', ({ nickname, roomId } = {}) => {
-    const cleanRoomId = sanitizeWord(roomId, 24);
-    if (!cleanRoomId) return;
-
-    if (!socket.rooms.has(cleanRoomId)) {
-      socket.emit('sudoku-error', { message: 'Please join the room first' });
+    const membership = syncSudokuMembership(io, socket, roomId, nickname);
+    if (!membership.ok) {
+      socket.emit('sudoku-error', { message: membership.error });
       return;
     }
 
-    joinSudokuRoom(io, socket, cleanRoomId, nickname);
+    emitStateToSocket(io, socket, membership.roomId, membership.state);
+    emitStateToRoom(io, membership.roomId, membership.state);
   });
 
   socket.on('create-room', () => {
@@ -293,26 +318,28 @@ function registerSudokuHandlers(io, socket) {
     startRound(io, socket, payload);
   });
 
-  socket.on('sudoku-request-state', () => {
-    const roomId = getSocketRoomId(socket);
-    if (!roomId) {
-      socket.emit('sudoku-state', {
-        roomId: null,
-        started: false,
-        difficulty: null,
-        puzzle: EMPTY_BOARD.slice(),
-        values: EMPTY_BOARD.slice(),
-        fixed: EMPTY_FIXED.slice(),
-        errors: [],
-        completed: false,
-        roundNumber: 0,
-        startedAt: null,
-        leaderboard: [],
-      });
+  socket.on('sudoku-request-state', ({ roomId, nickname } = {}) => {
+    let targetRoomId = getSocketRoomId(socket);
+    let state = targetRoomId ? getState(targetRoomId) : null;
+
+    if (roomId) {
+      const membership = syncSudokuMembership(io, socket, roomId, nickname);
+      if (!membership.ok) {
+        socket.emit('sudoku-error', { message: membership.error });
+        emitEmptyState(socket);
+        return;
+      }
+
+      targetRoomId = membership.roomId;
+      state = membership.state;
+    }
+
+    if (!targetRoomId || !state) {
+      emitEmptyState(socket);
       return;
     }
 
-    emitStateToSocket(io, socket, roomId, getState(roomId));
+    emitStateToSocket(io, socket, targetRoomId, state);
   });
 
   socket.on('sudoku-edit', ({ index, value, nickname } = {}) => {
