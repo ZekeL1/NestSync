@@ -121,6 +121,7 @@ function buildLeaderboard(io, roomId, state) {
 }
 
 function buildPublicState(io, roomId, state, currentPlayerId = null) {
+  const hasViewer = currentPlayerId !== null && currentPlayerId !== undefined;
   return {
     roomId,
     started: !!state.started,
@@ -133,10 +134,10 @@ function buildPublicState(io, roomId, state, currentPlayerId = null) {
     roundNumber: state.roundNumber || 0,
     startedAt: state.startedAt || null,
     leaderboard: buildLeaderboard(io, roomId, state),
-    currentPlayerId,
-    currentPlayerScore: currentPlayerId && typeof state.scores[currentPlayerId] === 'number'
+    currentPlayerId: hasViewer ? currentPlayerId : null,
+    currentPlayerScore: hasViewer && typeof state.scores[currentPlayerId] === 'number'
       ? state.scores[currentPlayerId]
-      : 0,
+      : null,
   };
 }
 

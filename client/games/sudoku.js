@@ -341,7 +341,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         if (state.currentPlayerId) {
             viewerPlayerId = String(state.currentPlayerId);
         }
-        viewerScore = Number(state.currentPlayerScore || 0);
+        if (state.currentPlayerScore !== null && state.currentPlayerScore !== undefined) {
+            viewerScore = Number(state.currentPlayerScore || 0);
+        }
 
         started = !!state.started;
         completed = !!state.completed;
