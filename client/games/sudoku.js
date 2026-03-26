@@ -26,6 +26,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     let roundNumber = 0;
     let activeStartedAt = null;
     let viewerPlayerId = getCurrentPlayerKey();
+    let viewerScore = 0;
 
     const socketListeners = {
         connect: () => {
@@ -247,6 +248,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             roundNumber = 0;
         }
         viewerPlayerId = getCurrentPlayerKey();
+        viewerScore = 0;
         setStartedUI(false);
         renderBoard();
         syncBoardSize();
@@ -339,6 +341,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         if (state.currentPlayerId) {
             viewerPlayerId = String(state.currentPlayerId);
         }
+        viewerScore = Number(state.currentPlayerScore || 0);
 
         started = !!state.started;
         completed = !!state.completed;
@@ -811,8 +814,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         if (scoreEl) {
-            const me = findCurrentLeaderboardEntry();
-            scoreEl.textContent = String(me ? Number(me.score || 0) : 0);
+            scoreEl.textContent = String(viewerScore);
         }
 
         if (hintEl) {
