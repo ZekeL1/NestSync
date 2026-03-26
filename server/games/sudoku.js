@@ -134,6 +134,9 @@ function buildPublicState(io, roomId, state, currentPlayerId = null) {
     startedAt: state.startedAt || null,
     leaderboard: buildLeaderboard(io, roomId, state),
     currentPlayerId,
+    currentPlayerScore: currentPlayerId && typeof state.scores[currentPlayerId] === 'number'
+      ? state.scores[currentPlayerId]
+      : 0,
   };
 }
 
@@ -159,6 +162,7 @@ function emitEmptyState(socket) {
     startedAt: null,
     leaderboard: [],
     currentPlayerId: null,
+    currentPlayerScore: 0,
   });
 }
 
