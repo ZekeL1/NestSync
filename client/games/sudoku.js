@@ -292,11 +292,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (waitHintEl) {
             if (!roomId) {
-                waitHintEl.innerText = 'Please join a room first.';
+                waitHintEl.innerText = 'Join a room.';
             } else if (!socket || !socket.connected) {
-                waitHintEl.innerText = 'Server connection is required to start Sudoku.';
+                waitHintEl.innerText = 'Connect to server.';
             } else {
-                waitHintEl.innerText = 'Choose a difficulty and click Start to begin.';
+                waitHintEl.innerText = 'Ready to start.';
             }
         }
 
@@ -683,20 +683,21 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               type="button"
               class="sudoku-key-btn"
               data-value="${index + 1}"
-              style="
-                height:44px;
-                border:none;
-                border-radius:14px;
-                background:white;
-                color:var(--text-main);
-                font-weight:800;
-                cursor:pointer;
-                box-shadow:0 4px 12px rgba(0,0,0,.05);
-                transition:.2s;
-              "
-            >
-              ${index + 1}
-            </button>
+                style="
+                  height:44px;
+                  border:none;
+                  border-radius:14px;
+                  background:white;
+                  color:var(--text-main);
+                  font-weight:800;
+                  cursor:pointer;
+                  box-shadow:0 4px 12px rgba(0,0,0,.05);
+                  transform:translateY(0);
+                  transition:transform .16s, box-shadow .16s, background .16s, color .16s;
+                "
+              >
+                ${index + 1}
+              </button>
           `).join('')}
           <button
             type="button"
@@ -710,6 +711,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               color:#d63031;
               font-weight:800;
               cursor:pointer;
+              box-shadow:0 4px 12px rgba(0,0,0,.05);
+              transform:translateY(0);
+              transition:transform .16s, box-shadow .16s, background .16s;
             "
           >
             <i class="fa-solid fa-eraser"></i> Erase
@@ -718,6 +722,18 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         const keyButtons = keypadEl.querySelectorAll('.sudoku-key-btn');
         keyButtons.forEach((button) => {
+            button.addEventListener('mouseenter', () => {
+                button.style.background = 'rgba(108,92,231,.14)';
+                button.style.color = 'var(--primary-color)';
+                button.style.transform = 'translateY(-1px)';
+                button.style.boxShadow = '0 10px 22px rgba(108,92,231,.18)';
+            });
+            button.addEventListener('mouseleave', () => {
+                button.style.background = 'white';
+                button.style.color = 'var(--text-main)';
+                button.style.transform = 'translateY(0)';
+                button.style.boxShadow = '0 4px 12px rgba(0,0,0,.05)';
+            });
             button.addEventListener('click', () => {
                 applyValue(button.dataset.value);
             });
@@ -725,6 +741,16 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         const eraseBtn = keypadEl.querySelector('#sudoku-erase');
         if (eraseBtn) {
+            eraseBtn.addEventListener('mouseenter', () => {
+                eraseBtn.style.background = 'rgba(255,118,117,.16)';
+                eraseBtn.style.transform = 'translateY(-1px)';
+                eraseBtn.style.boxShadow = '0 10px 22px rgba(255,118,117,.16)';
+            });
+            eraseBtn.addEventListener('mouseleave', () => {
+                eraseBtn.style.background = 'rgba(255,255,255,.9)';
+                eraseBtn.style.transform = 'translateY(0)';
+                eraseBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,.05)';
+            });
             eraseBtn.addEventListener('click', () => {
                 applyValue(0);
             });
@@ -821,15 +847,15 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (hintEl) {
             if (!started) {
-                hintEl.textContent = 'Room members will share the same puzzle once someone starts.';
+                hintEl.textContent = 'Waiting';
             } else if (completed) {
-                hintEl.textContent = 'Puzzle solved. Start the next shared round when ready.';
+                hintEl.textContent = 'Solved';
             } else if (selectedIndex === null) {
-                hintEl.textContent = 'Select a cell to type a number or use the keypad.';
+                hintEl.textContent = 'Pick a cell';
             } else if (fixed[selectedIndex]) {
-                hintEl.textContent = 'Selected cell is a fixed clue. Choose an empty cell to edit.';
+                hintEl.textContent = 'Fixed clue';
             } else {
-                hintEl.textContent = 'Edits are synced through the room in real time.';
+                hintEl.textContent = 'Editing';
             }
         }
 
@@ -861,7 +887,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             <div id="sudoku-waiting" class="glass-panel" style="height:calc(100% - 58px); display:flex; align-items:center; justify-content:center; text-align:center;">
               <div style="width:min(560px, 92%);">
                 <div style="font-size:40px; margin-bottom:8px; color:#6c5ce7;"><i class="fa-solid fa-spinner fa-spin"></i></div>
-                <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting for puzzle to start...</div>
+                <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting</div>
                 <div id="sudoku-wait-hint" style="opacity:.75; margin-bottom:14px;">Please join a room first.</div>
 
                 <div class="glass-panel" style="padding:14px; margin-bottom:14px; text-align:left;">
@@ -923,7 +949,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   <div id="sudoku-board-panel" class="glass-panel" style="width:min(100%, 700px); height:100%; max-width:100%; max-height:100%; padding:14px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                       <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Shared Puzzle Surface</div>
-                      <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Pick a difficulty and press Start to generate a random puzzle.</div>
+                      <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Waiting</div>
                     </div>
 
                     <div id="sudoku-board-stage" style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
@@ -964,17 +990,6 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   <div id="sudoku-keypad" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px; flex:1;">
-                  <div style="font-weight:800; margin-bottom:8px;">Controls</div>
-                  <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-                    <span class="status-pill online" style="font-size:.78rem;">Click Cell</span>
-                    <span class="status-pill online" style="font-size:.78rem;">Type 1-9</span>
-                    <span class="status-pill online" style="font-size:.78rem;">Erase</span>
-                  </div>
-                  <div style="opacity:.76; line-height:1.6; font-size:.95rem;">
-                    This stage uses shared room state. Everyone in the room sees the same puzzle, the same progress, and the same scoreboard.
-                  </div>
-                </div>
               </div>
             </div>
           </div>
