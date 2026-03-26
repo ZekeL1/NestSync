@@ -11,6 +11,9 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
                     <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
                         <button id="pict-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-forward"></i> Next Round</button>
+                        <button id="pict-back" class="btn-icon" title="Back to Arcade">
+                          <i class="fa-solid fa-arrow-left"></i>
+                        </button>
           </div>
         </div>
 
@@ -93,6 +96,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const waitStartBtn = document.getElementById('pict-wait-start');
     const waitHintEl = document.getElementById('pict-wait-hint');
     const nextBtn = document.getElementById('pict-next');
+    const backBtn = document.getElementById('pict-back');
 
     const waitingEl = document.getElementById('pict-waiting');
     const liveAreaEl = document.getElementById('pict-live-area');
@@ -468,6 +472,13 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     modalWordEl.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') confirmStart();
     });
+
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            if (typeof window.initArcadeGames !== 'function') return;
+            window.initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId });
+        });
+    }
 
     guessBtn.addEventListener('click', sendGuess);
     guessEl.addEventListener('keypress', (event) => {
