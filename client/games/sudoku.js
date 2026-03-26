@@ -929,6 +929,15 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px); min-height:0;">
               <div style="flex:1; min-width:520px;">
                 <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
+                <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
+                  <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
+                    <i class="fa-solid fa-forward"></i> Next Puzzle
+                  </button>
+                  <button id="sudoku-end" class="btn-icon" title="End Game">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                  </button>
+                </div>
+
                 <div id="sudoku-board-panel" style="display:flex; flex-direction:column; gap:10px; flex:1; min-height:0;">
                     <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                       <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
@@ -948,26 +957,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               </div>
 
               <div style="width:360px; display:flex; flex-direction:column; gap:12px;">
-                <div class="glass-panel" style="padding:12px;">
-                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-                    <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Interactive Board</div>
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-                      <div class="glass-panel" style="height:44px; padding:0 14px; display:flex; align-items:center; gap:8px; border-radius:14px;">
-                        <i class="fa-regular fa-clock" style="color:#6c5ce7;"></i>
-                        <strong id="sudoku-timer">00:00</strong>
-                      </div>
-                      <button id="sudoku-end" class="btn-icon" title="End Game">
-                        <i class="fa-solid fa-flag-checkered"></i>
-                      </button>
-                      <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
-                        <i class="fa-solid fa-forward"></i> Next Puzzle
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
                 <div class="glass-panel" style="padding:14px;">
                   <div style="font-weight:800; margin-bottom:8px;">Puzzle Stats</div>
+                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                    <span style="opacity:.75;">Timer</span>
+                    <strong id="sudoku-timer">00:00</strong>
+                  </div>
                   <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
                     <span style="opacity:.75;">Round</span>
                     <strong id="sudoku-round-value">-</strong>
