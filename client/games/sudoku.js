@@ -25,6 +25,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     let activeRoomId = getJoinedRoomId();
     let roundNumber = 0;
     let activeStartedAt = null;
+    let viewerPlayerId = getCurrentPlayerKey();
 
     const socketListeners = {
         connect: () => {
@@ -167,7 +168,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     }
 
     function findCurrentLeaderboardEntry() {
-        const playerKey = getCurrentPlayerKey();
+        const playerKey = viewerPlayerId || getCurrentPlayerKey();
         const displayName = getDisplayName();
         const user = getCurrentUser ? getCurrentUser() : null;
         const username = user && user.username ? String(user.username) : '';
@@ -245,6 +246,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         if (resetRound) {
             roundNumber = 0;
         }
+        viewerPlayerId = getCurrentPlayerKey();
         setStartedUI(false);
         renderBoard();
         syncBoardSize();
@@ -332,6 +334,10 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const joinedRoomId = getJoinedRoomId();
         if (state.roomId && joinedRoomId && state.roomId !== joinedRoomId) {
             return;
+        }
+
+        if (state.currentPlayerId) {
+            viewerPlayerId = String(state.currentPlayerId);
         }
 
         started = !!state.started;
