@@ -318,6 +318,32 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         showToast(`Loaded a new ${selectedDifficulty} puzzle.`);
     }
 
+    function handleEndGame() {
+        if (!started) {
+            showToast('No active puzzle to end right now.');
+            return;
+        }
+
+        stopTimer();
+        started = false;
+        completed = false;
+        selectedIndex = null;
+        puzzle = Array(81).fill(0);
+        solution = Array(81).fill(0);
+        values = Array(81).fill(0);
+        fixed = Array(81).fill(false);
+        errors = new Set();
+        cellOutcome = Array(81).fill('empty');
+
+        setStartedUI(false);
+        refreshStartAvailability();
+        renderBoard();
+        renderMeta();
+        renderKeypad();
+        renderLeaderboard();
+        showToast('Sudoku game ended.');
+    }
+
     function selectCell(index) {
         if (!started) return;
         selectedIndex = index;
@@ -646,6 +672,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const mistakesEl = gamesRoot.querySelector('#sudoku-mistakes-value');
         const hintEl = gamesRoot.querySelector('#sudoku-hint');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
+        const endBtn = gamesRoot.querySelector('#sudoku-end');
         const roundEl = gamesRoot.querySelector('#sudoku-round-value');
         const scoreEl = gamesRoot.querySelector('#sudoku-score-value');
 
@@ -702,6 +729,10 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (nextBtn) {
             nextBtn.style.opacity = started ? '1' : '.7';
+        }
+
+        if (endBtn) {
+            endBtn.style.opacity = started ? '1' : '.7';
         }
     }
 
@@ -773,6 +804,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                       <i class="fa-regular fa-clock" style="color:#6c5ce7;"></i>
                       <strong id="sudoku-timer">00:00</strong>
                     </div>
+                    <button id="sudoku-end" class="btn-icon" title="End Game">
+                      <i class="fa-solid fa-flag-checkered"></i>
+                    </button>
                     <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
                       <i class="fa-solid fa-forward"></i> Next Puzzle
                     </button>
@@ -841,6 +875,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const backBtn = gamesRoot.querySelector('#sudoku-back');
         const waitStartBtn = gamesRoot.querySelector('#sudoku-wait-start');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
+        const endBtn = gamesRoot.querySelector('#sudoku-end');
 
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -856,6 +891,10 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (nextBtn) {
             nextBtn.addEventListener('click', handleNextPuzzle);
+        }
+
+        if (endBtn) {
+            endBtn.addEventListener('click', handleEndGame);
         }
 
         renderDifficultyButtons();
