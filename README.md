@@ -12,7 +12,7 @@ NestSync adopts a **MultiT Tab** interface, providing parents and children with 
 | Module | Explain |
 |--------|---------|
 | **Sync Cinema** | Real-time synchronous playback based on web page videos. When one side pauses or seeks, the other side's screen is updated synchronously.|
-| **Arcade** | It comes with the built-in Pictionary game "You Draw, I Guess" and supports multi-person collaboration in the same room. |
+| **Arcade** | It includes built-in room-based games such as Pictionary and collaborative Sudoku, with shared state for players in the same room. |
 | **Fairy Tales** | Digital fairy tale library, including picture book readings such as "Cinderella", "Peter Pan", and "Little Red Riding Hood". |
 | **Family Link** | WebRTC video calls and text chats support real-time video overlay.|
 
@@ -45,7 +45,8 @@ NestSync/
 │   ├── package.json
 │   └── games/              # Game frontend
 │       ├── index.js        # Arcade interface
-│       └── pictionary.js   # Pictionary "you draw, I guess"
+│       ├── pictionary.js   # Pictionary "you draw, I guess"
+│       └── sudoku.js       # Collaborative Sudoku
 ├── server/                 # Express backend
 │   ├── server.js           # Main entrance（API + Socket.io）
 │   ├── db.js               # MySQL connection
@@ -53,7 +54,8 @@ NestSync/
 │   ├── package.json
 │   ├── games/              # Game backend logic
 │   │   ├── index.js
-│   │   └── pictionary.js   # Pictionary Socket
+│   │   ├── pictionary.js   # Pictionary Socket
+│   │   └── sudoku.js       # Sudoku Socket
 │   └── src/                # Modular services (such as Cognito, etc)
 │       ├── config.js
 │       ├── auth/           # Cognito, JWT, etc
@@ -163,6 +165,7 @@ This runs tests for `passwordService`, `phaseAPolicyService`, and `registerServi
 - **Chat**：`chat-message`
 - **WebRTC**：`webrtc-offer`, `webrtc-answer`, `webrtc-ice-candidate`
 - **Pictionary**：`pict-set-profile`, `pict-start`, `pict-draw`, `pict-guess`, `pict-end-round`, `pict-clear` etc.
+- **Sudoku**：`sudoku-set-profile`, `sudoku-start`, `sudoku-edit`, `sudoku-request-state`, `sudoku-next-round`, `sudoku-end-game`, `sudoku-reset-scores`
 
 ---
 

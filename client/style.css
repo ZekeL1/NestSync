@@ -98,7 +98,7 @@ body {
 .room-controls { display: flex; gap: 12px; -webkit-app-region: no-drag; }
 .input-room { border: none; background: rgba(0,0,0,0.04); padding: 0 16px; border-radius: 14px; font-weight: 700; width: 100px; text-align: center; color: var(--primary-color); font-size: 1rem; transition: 0.3s; }
 .input-room:focus { background: white; width: 120px; box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1); }
-.btn-icon { width: 44px; height: 44px; border-radius: 14px; border:none; background: white; cursor: pointer; transition: 0.2s var(--ease-bounce); color: var(--text-main); }
+.btn-icon { width: 44px; height: 44px; border-radius: 14px; border:none; background: white; cursor: pointer; transition: 0.2s var(--ease-bounce); color: var(--text-main); display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; }
 .btn-icon:hover { transform: scale(1.1); color: var(--primary-color); }
 .btn-icon.leave-mode { color: #d63031; }
 .btn-icon.leave-mode:hover { color: #d63031; }
