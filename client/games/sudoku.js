@@ -15,21 +15,21 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     let completed = false;
     let selectedIndex = null;
     let puzzle = Array(81).fill(0);
-    let solution = Array(81).fill(0);
     let values = Array(81).fill(0);
     let fixed = Array(81).fill(false);
     let errors = new Set();
+    let leaderboard = [];
     let timerSeconds = 0;
     let timerStartedAt = null;
     let timerIntervalId = null;
     let activeRoomId = getJoinedRoomId();
-    let playerScore = 0;
     let roundNumber = 0;
-    let cellOutcome = Array(81).fill('empty');
+    let activeStartedAt = null;
 
     const socketListeners = {
         connect: () => {
             refreshStartAvailability();
+            requestSudokuState();
             renderMeta();
         },
         disconnect: () => {
@@ -38,38 +38,53 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         },
         'room-created': () => {
             const nextRoomId = getJoinedRoomId();
-            if (nextRoomId && nextRoomId !== activeRoomId) {
-                resetRoomProgress();
-                resetLocalGameState();
+            if (nextRoomId !== activeRoomId) {
+                resetLocalGameState({ clearLeaderboard: true, resetRound: true });
             }
             activeRoomId = nextRoomId;
             refreshStartAvailability();
+            requestSudokuState();
             renderMeta();
         },
         'room-joined': () => {
             const nextRoomId = getJoinedRoomId();
-            if (nextRoomId && nextRoomId !== activeRoomId) {
-                resetRoomProgress();
-                resetLocalGameState();
+            if (nextRoomId !== activeRoomId) {
+                resetLocalGameState({ clearLeaderboard: true, resetRound: true });
             }
             activeRoomId = nextRoomId;
             refreshStartAvailability();
+            requestSudokuState();
             renderMeta();
         },
         'room-left': () => {
             activeRoomId = null;
-            resetRoomProgress();
-            resetLocalGameState();
+            resetLocalGameState({ clearLeaderboard: true, resetRound: true });
             refreshStartAvailability();
             renderMeta();
+        },
+        'sudoku-state': (state) => {
+            applyServerState(state);
+        },
+        'sudoku-round-started': ({ difficulty, startedBy, roundNumber: nextRound }) => {
+            const who = startedBy || 'Someone';
+            const label = difficulty || selectedDifficulty;
+            showToast(`${who} started ${label} Sudoku${nextRound ? ` (Round ${nextRound})` : ''}.`);
+        },
+        'sudoku-complete': ({ completedBy }) => {
+            const who = completedBy || 'Someone';
+            showToast(`${who} completed the puzzle!`);
+        },
+        'sudoku-ended': ({ endedBy }) => {
+            const who = endedBy || 'Someone';
+            showToast(`Sudoku ended by ${who}.`);
+        },
+        'sudoku-error': ({ message }) => {
+            if (message) showToast(message);
         },
     };
 
     function cleanup() {
-        if (timerIntervalId) {
-            clearInterval(timerIntervalId);
-            timerIntervalId = null;
-        }
+        stopTimer();
         window.removeEventListener('keydown', onWindowKeyDown);
         window.removeEventListener('resize', syncBoardSize);
         if (socket && typeof socket.off === 'function') {
@@ -152,6 +167,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     }
 
     function getStatusLabel() {
+        if (!socket || !socket.connected) return 'Offline';
         if (completed) return 'Solved';
         if (started) return 'Playing';
         return 'Ready';
@@ -162,83 +178,52 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             clearInterval(timerIntervalId);
             timerIntervalId = null;
         }
-        if (timerStartedAt !== null) {
-            timerSeconds = Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
-        }
+        timerStartedAt = null;
+        activeStartedAt = null;
     }
 
-    function startTimer() {
+    function syncTimer(startedAt) {
+        if (!started || !startedAt) {
+            timerSeconds = 0;
+            stopTimer();
+            return;
+        }
+
+        if (timerIntervalId && activeStartedAt === startedAt) {
+            timerSeconds = Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
+            return;
+        }
+
         stopTimer();
-        timerSeconds = 0;
-        timerStartedAt = Date.now();
+        timerStartedAt = Number(startedAt);
+        activeStartedAt = startedAt;
+        timerSeconds = Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
         timerIntervalId = setInterval(() => {
             timerSeconds = Math.max(0, Math.floor((Date.now() - timerStartedAt) / 1000));
             renderMeta();
         }, 1000);
     }
 
-    function recomputeErrors() {
-        const nextErrors = new Set();
-
-        values.forEach((value, index) => {
-            if (!value) return;
-            if (value !== solution[index]) {
-                nextErrors.add(index);
-            }
-        });
-
-        errors = nextErrors;
-    }
-
-    function updateCompletionState() {
-        const isSolved = values.every((value, index) => value === solution[index]);
-
-        if (isSolved && !completed) {
-            completed = true;
-            stopTimer();
-            renderMeta();
-            showToast(`Sudoku solved in ${formatTime(timerSeconds)}.`);
-            return;
-        }
-
-        completed = isSolved;
-    }
-
     function getFirstEditableIndex() {
         return fixed.findIndex((item) => !item);
     }
 
-    function resetBoardState(difficulty) {
-        const nextBoard = generateSudokuBoard(difficulty);
-        puzzle = nextBoard.puzzle;
-        solution = nextBoard.solution;
-        values = nextBoard.puzzle.slice();
-        fixed = nextBoard.puzzle.map((value) => value !== 0);
-        errors = new Set();
-        cellOutcome = Array(81).fill('empty');
-        started = true;
-        completed = false;
-        roundNumber += 1;
-        selectedIndex = getFirstEditableIndex();
-        startTimer();
-    }
-
-    function resetRoomProgress() {
-        playerScore = 0;
-        roundNumber = 0;
-    }
-
-    function resetLocalGameState() {
+    function resetLocalGameState(options = {}) {
+        const { clearLeaderboard = false, resetRound = false } = options;
         stopTimer();
         started = false;
         completed = false;
         selectedIndex = null;
         puzzle = Array(81).fill(0);
-        solution = Array(81).fill(0);
         values = Array(81).fill(0);
         fixed = Array(81).fill(false);
         errors = new Set();
-        cellOutcome = Array(81).fill('empty');
+        if (clearLeaderboard) {
+            leaderboard = [];
+        }
+        if (resetRound) {
+            roundNumber = 0;
+        }
         setStartedUI(false);
         renderBoard();
         syncBoardSize();
@@ -269,7 +254,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     }
 
     function refreshStartAvailability(notify = false) {
-        const joined = !!getJoinedRoomId();
+        const roomId = getJoinedRoomId();
+        const joined = !!roomId && !!socket && socket.connected;
         const waitStartBtn = gamesRoot.querySelector('#sudoku-wait-start');
         const waitHintEl = gamesRoot.querySelector('#sudoku-wait-hint');
 
@@ -280,75 +266,136 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         if (waitHintEl) {
-            waitHintEl.innerText = joined
-                ? 'Choose a difficulty and click Start to begin.'
-                : 'Please join a room first.';
+            if (!roomId) {
+                waitHintEl.innerText = 'Please join a room first.';
+            } else if (!socket || !socket.connected) {
+                waitHintEl.innerText = 'Server connection is required to start Sudoku.';
+            } else {
+                waitHintEl.innerText = 'Choose a difficulty and click Start to begin.';
+            }
         }
 
-        if (notify && !joined) {
-            showToast('Please join a room first');
+        if (notify) {
+            if (!roomId) {
+                showToast('Please join a room first');
+            } else if (!socket || !socket.connected) {
+                showToast('Server connection is required for Sudoku.');
+            }
         }
     }
 
-    function handleStart() {
-        if (!getJoinedRoomId()) {
-            refreshStartAvailability(true);
-            return;
+    function syncSudokuProfile() {
+        const roomId = getJoinedRoomId();
+        const nickname = getDisplayName();
+
+        if (!roomId || !nickname || !socket || !socket.connected) {
+            return false;
         }
 
-        resetBoardState(selectedDifficulty);
-        setStartedUI(true);
-        renderBoard();
-        syncBoardSize();
-        renderMeta();
-        renderKeypad();
-        showToast(`${selectedDifficulty} Sudoku started.`);
+        socket.emit('sudoku-set-profile', { roomId, nickname });
+        return true;
     }
 
-    function handleNextPuzzle() {
-        if (!getJoinedRoomId()) {
-            refreshStartAvailability(true);
-            return;
-        }
-
-        if (!started) {
-            handleStart();
-            return;
-        }
-
-        resetBoardState(selectedDifficulty);
-        renderBoard();
-        syncBoardSize();
-        renderMeta();
-        renderKeypad();
-        showToast(`Loaded a new ${selectedDifficulty} puzzle.`);
+    function requestSudokuState() {
+        if (!socket || !socket.connected) return;
+        if (!syncSudokuProfile()) return;
+        socket.emit('sudoku-request-state');
     }
 
-    function handleEndGame() {
-        if (!started) {
-            showToast('No active puzzle to end right now.');
+    function applyServerState(state) {
+        if (!state) return;
+
+        const joinedRoomId = getJoinedRoomId();
+        if (state.roomId && joinedRoomId && state.roomId !== joinedRoomId) {
             return;
         }
 
-        stopTimer();
-        started = false;
-        completed = false;
-        selectedIndex = null;
-        puzzle = Array(81).fill(0);
-        solution = Array(81).fill(0);
-        values = Array(81).fill(0);
-        fixed = Array(81).fill(false);
-        errors = new Set();
-        cellOutcome = Array(81).fill('empty');
+        started = !!state.started;
+        completed = !!state.completed;
+        roundNumber = Number(state.roundNumber || 0);
+        leaderboard = Array.isArray(state.leaderboard) ? state.leaderboard.slice() : [];
 
-        setStartedUI(false);
-        refreshStartAvailability();
+        if (state.difficulty) {
+            selectedDifficulty = state.difficulty;
+        }
+
+        puzzle = Array.isArray(state.puzzle) && state.puzzle.length === 81 ? state.puzzle.slice() : Array(81).fill(0);
+        values = Array.isArray(state.values) && state.values.length === 81 ? state.values.slice() : puzzle.slice();
+        fixed = Array.isArray(state.fixed) && state.fixed.length === 81 ? state.fixed.slice() : puzzle.map((value) => value !== 0);
+        errors = new Set(Array.isArray(state.errors) ? state.errors : []);
+
+        if (started) {
+            if (selectedIndex === null || fixed[selectedIndex]) {
+                selectedIndex = getFirstEditableIndex();
+            }
+            setStartedUI(true);
+            syncTimer(state.startedAt);
+        } else {
+            selectedIndex = null;
+            setStartedUI(false);
+            timerSeconds = 0;
+            stopTimer();
+        }
+
+        renderDifficultyButtons();
         renderBoard();
         syncBoardSize();
         renderMeta();
         renderKeypad();
         renderLeaderboard();
-        showToast('Sudoku game ended.');
+    }
+
+    function buildRoundPayload() {
+        const nextBoard = generateSudokuBoard(selectedDifficulty);
+        return {
+            difficulty: selectedDifficulty,
+            puzzle: nextBoard.puzzle,
+            solution: nextBoard.solution,
+            nickname: getDisplayName(),
+        };
+    }
+
+    function handleStart() {
+        if (!getJoinedRoomId() || !socket || !socket.connected) {
+            refreshStartAvailability(true);
+            return;
+        }
+
+        if (!syncSudokuProfile()) {
+            refreshStartAvailability(true);
+            return;
+        }
+
+        socket.emit('sudoku-start', buildRoundPayload());
+    }
+
+    function handleNextPuzzle() {
+        if (!getJoinedRoomId() || !socket || !socket.connected) {
+            refreshStartAvailability(true);
+            return;
+        }
+
+        if (!syncSudokuProfile()) {
+            refreshStartAvailability(true);
+            return;
+        }
+
+        socket.emit('sudoku-next-round', buildRoundPayload());
+    }
+
+    function handleEndGame() {
+        if (!started && !completed) {
+            showToast('No active puzzle to end right now.');
+            return;
+        }
+
+        if (!getJoinedRoomId() || !socket || !socket.connected) {
+            refreshStartAvailability(true);
+            return;
+        }
+
+        syncSudokuProfile();
+        socket.emit('sudoku-end', { nickname: getDisplayName() });
     }
 
     function selectCell(index) {
@@ -382,32 +429,19 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         const nextValue = rawValue ? Number(rawValue) : 0;
         if (nextValue < 0 || nextValue > 9 || Number.isNaN(nextValue)) return;
+        if (values[selectedIndex] === nextValue) return;
 
-        const previousValue = values[selectedIndex];
-        if (previousValue === nextValue) return;
-
-        values[selectedIndex] = nextValue;
-        recomputeErrors();
-
-        const nextOutcome = nextValue === 0
-            ? 'empty'
-            : (nextValue === solution[selectedIndex] ? 'correct' : 'incorrect');
-        const previousOutcome = cellOutcome[selectedIndex];
-
-        if (nextOutcome !== previousOutcome) {
-            if (nextOutcome === 'correct') {
-                playerScore += 2;
-            } else if (nextOutcome === 'incorrect') {
-                playerScore -= 1;
-            }
+        if (!socket || !socket.connected) {
+            showToast('Server connection is required for Sudoku.');
+            return;
         }
 
-        cellOutcome[selectedIndex] = nextOutcome;
-        updateCompletionState();
-        renderBoard();
-        renderMeta();
-        renderKeypad();
-        renderLeaderboard();
+        syncSudokuProfile();
+        socket.emit('sudoku-edit', {
+            index: selectedIndex,
+            value: nextValue,
+            nickname: getDisplayName(),
+        });
     }
 
     function moveSelection(rowOffset, colOffset) {
@@ -666,17 +700,15 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const containers = gamesRoot.querySelectorAll('[data-sudoku-scoreboard]');
         if (!containers.length) return;
 
-        const rows = [
-            {
-                name: getDisplayName(),
-                score: playerScore,
-            },
-        ];
-
         containers.forEach((container) => {
             container.innerHTML = '';
 
-            rows.forEach((row, index) => {
+            if (!leaderboard.length) {
+                container.textContent = '-';
+                return;
+            }
+
+            leaderboard.forEach((row, index) => {
                 const item = document.createElement('div');
                 item.style.display = 'flex';
                 item.style.justifyContent = 'space-between';
@@ -684,10 +716,10 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 item.style.padding = '3px 0';
 
                 const left = document.createElement('span');
-                left.textContent = `#${index + 1} ${row.name}`;
+                left.textContent = `#${index + 1} ${row.id === socket.id ? 'You' : (row.name || 'Guest')}`;
 
                 const right = document.createElement('strong');
-                right.textContent = String(row.score);
+                right.textContent = String(row.score || 0);
 
                 item.appendChild(left);
                 item.appendChild(right);
@@ -710,8 +742,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const scoreEl = gamesRoot.querySelector('#sudoku-score-value');
 
         if (statusEl) {
+            const online = socket && socket.connected;
             statusEl.textContent = getStatusLabel();
-            statusEl.className = `status-pill ${completed || started ? 'online' : 'offline'}`;
+            statusEl.className = `status-pill ${online ? 'online' : 'offline'}`;
         }
 
         if (timerEl) {
@@ -743,20 +776,21 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         if (scoreEl) {
-            scoreEl.textContent = String(playerScore);
+            const me = leaderboard.find((item) => item.id === socket.id);
+            scoreEl.textContent = String(me ? Number(me.score || 0) : 0);
         }
 
         if (hintEl) {
             if (!started) {
-                hintEl.textContent = 'Pick a difficulty and press Start to generate a random puzzle.';
+                hintEl.textContent = 'Room members will share the same puzzle once someone starts.';
             } else if (completed) {
-                hintEl.textContent = `Solved in ${formatTime(timerSeconds)}. Press Next Puzzle for another round.`;
+                hintEl.textContent = 'Puzzle solved. Start the next shared round when ready.';
             } else if (selectedIndex === null) {
                 hintEl.textContent = 'Select a cell to type a number or use the keypad.';
             } else if (fixed[selectedIndex]) {
                 hintEl.textContent = 'Selected cell is a fixed clue. Choose an empty cell to edit.';
             } else {
-                hintEl.textContent = 'Use 1-9, Backspace/Delete, arrow keys, or the keypad.';
+                hintEl.textContent = 'Edits are synced through the room in real time.';
             }
         }
 
@@ -899,7 +933,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                     <span class="status-pill online" style="font-size:.78rem;">Erase</span>
                   </div>
                   <div style="opacity:.76; line-height:1.6; font-size:.95rem;">
-                    This phase is local-only. You can generate random boards, fill numbers, erase cells, see mistakes instantly, and track solve time before we wire multiplayer sync.
+                    This stage uses shared room state. Everyone in the room sees the same puzzle, the same progress, and the same scoreboard.
                   </div>
                 </div>
               </div>
@@ -950,6 +984,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             socket.on(eventName, handler);
         });
     }
+    requestSudokuState();
 }
 
 window.mountSudokuGame = mountSudokuGame;
