@@ -157,6 +157,10 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         logEl.scrollTop = logEl.scrollHeight;
     }
 
+    function resetRoundLog() {
+        logEl.innerHTML = '';
+    }
+
     function resetLocalRoomView() {
         drawerId = null;
         drawerName = null;
@@ -168,7 +172,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         clearBoard();
         setRoundUI(false);
 
-        logEl.innerHTML = '';
+        resetRoundLog();
         appendGameMsg('Game ready. Waiting for start.', 'system');
         updateStatus();
     }
@@ -583,6 +587,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         setRoundUI(!!state.roundActive);
 
         if (!wasRoundActive && state.roundActive) {
+            resetRoundLog();
             const drawerText = drawerId === socket.id ? 'You' : (drawerName || 'Unknown');
             appendGameMsg(`Round is already in progress. Drawer: ${drawerText}`, 'system');
         }
@@ -597,6 +602,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         myWord = null;
         clearBoard();
         setRoundUI(true);
+        resetRoundLog();
         appendGameMsg(`Round started. Drawer: ${nextDrawerId === socket.id ? 'You' : (drawerName || 'Unknown')}`, 'system');
         updateStatus();
     });
