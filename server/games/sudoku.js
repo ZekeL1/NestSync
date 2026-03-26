@@ -120,7 +120,7 @@ function buildLeaderboard(io, roomId, state) {
     });
 }
 
-function buildPublicState(io, roomId, state) {
+function buildPublicState(io, roomId, state, currentPlayerId = null) {
   return {
     roomId,
     started: !!state.started,
@@ -133,6 +133,7 @@ function buildPublicState(io, roomId, state) {
     roundNumber: state.roundNumber || 0,
     startedAt: state.startedAt || null,
     leaderboard: buildLeaderboard(io, roomId, state),
+    currentPlayerId,
   };
 }
 
@@ -141,7 +142,7 @@ function emitStateToRoom(io, roomId, state) {
 }
 
 function emitStateToSocket(io, socket, roomId, state) {
-  socket.emit('sudoku-state', buildPublicState(io, roomId, state));
+  socket.emit('sudoku-state', buildPublicState(io, roomId, state, getPlayerKey(socket)));
 }
 
 function emitEmptyState(socket) {
@@ -157,6 +158,7 @@ function emitEmptyState(socket) {
     roundNumber: 0,
     startedAt: null,
     leaderboard: [],
+    currentPlayerId: null,
   });
 }
 
