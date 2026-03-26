@@ -134,23 +134,53 @@
             
             <div id="games" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Games Area</h1></div></div>
             <div id="tales" class="tab-content tales-tab">
-                <div class="tales-header">
-                    <h2 class="tales-title"><i class="fa-solid fa-book-open"></i> Choose a Story</h2>
+                <div class="tales-switcher" id="tales-switcher">
+                    <button type="button" class="tales-switch-btn is-active" data-tales-pane="library">
+                        <i class="fa-solid fa-book-open"></i> Choose a Story
+                    </button>
+                    <button type="button" class="tales-switch-btn" data-tales-pane="ai">
+                        <i class="fa-solid fa-book-open-reader"></i> Smart Fairytale Teller
+                    </button>
                 </div>
-                <div class="tales-grid" id="tales-grid">
-                    <div class="story-card" data-story="cinderella" tabindex="0">
-                        <div class="story-cover story-cover-cinderella"></div>
-                        <span class="story-name">Cinderella</span>
+                <section class="tales-pane is-active" id="tales-pane-library">
+                    <div class="tales-grid" id="tales-grid">
+                        <div class="story-card" data-story="cinderella" tabindex="0">
+                            <div class="story-cover story-cover-cinderella"></div>
+                            <span class="story-name">Cinderella</span>
+                        </div>
+                        <div class="story-card" data-story="peterpan" tabindex="0">
+                            <div class="story-cover story-cover-peterpan"></div>
+                            <span class="story-name">Peter Pan</span>
+                        </div>
+                        <div class="story-card" data-story="littlered" tabindex="0">
+                            <div class="story-cover story-cover-littlered"></div>
+                            <span class="story-name">Little Red Riding Hood</span>
+                        </div>
                     </div>
-                    <div class="story-card" data-story="peterpan" tabindex="0">
-                        <div class="story-cover story-cover-peterpan"></div>
-                        <span class="story-name">Peter Pan</span>
-                    </div>
-                    <div class="story-card" data-story="littlered" tabindex="0">
-                        <div class="story-cover story-cover-littlered"></div>
-                        <span class="story-name">Little Red Riding Hood</span>
-                    </div>
-                </div>
+                </section>
+                <section class="tales-pane" id="tales-pane-ai" hidden>
+                    <section class="ai-tales-panel" id="ai-tales-panel">
+                        <form id="ai-tales-form" class="ai-tales-form">
+                            <textarea
+                                id="ai-tales-prompt"
+                                class="ai-tales-input"
+                                rows="5"
+                                maxlength="800"
+                                placeholder="Describe your custom crossover fairy tale idea.&#10;For example: Tell me a story about Judy and Cinderella."
+                                required
+                            ></textarea>
+                            <div class="ai-tales-actions">
+                                <button type="submit" id="ai-tales-generate" class="ai-tales-generate-btn">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Story
+                                </button>
+                                <span class="ai-tales-badge" id="ai-tales-model-badge">Local LLM: phi3:mini</span>
+                            </div>
+                        </form>
+                        <article class="ai-tales-output" id="ai-tales-output">
+                            <p class="ai-tales-placeholder">Your own lovely story is coming here!</p>
+                        </article>
+                    </section>
+                </section>
                 <div class="tales-reader" id="tales-reader" hidden>
                     <button class="tales-reader-close" id="tales-reader-close" title="Back to list"><i class="fa-solid fa-arrow-left"></i></button>
                     <div class="tales-reader-inner">
@@ -204,5 +234,6 @@
     <script src="games/pictionary.js"></script>
     <script src="games/index.js"></script>
     <script src="renderer.js"></script>
+    <script src="ai-fairytale.js"></script>
 </body>
 </html>
