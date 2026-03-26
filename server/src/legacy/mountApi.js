@@ -1,5 +1,6 @@
 const authRoutes = require("../routes/authRoutes");
 const protectedRoutes = require("../routes/protectedRoutes");
+const aiFairytaleRoutes = require("../routes/aiFairytaleRoutes");
 
 function mountApi(app) {
   app.get("/health/auth", (req, res) => {
@@ -7,6 +8,7 @@ function mountApi(app) {
   });
 
   app.use("/auth", authRoutes);
+  app.use("/api", aiFairytaleRoutes);
   app.use("/", protectedRoutes);
 }
 
