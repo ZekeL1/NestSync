@@ -71,6 +71,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             timerIntervalId = null;
         }
         window.removeEventListener('keydown', onWindowKeyDown);
+        window.removeEventListener('resize', syncBoardSize);
         if (socket && typeof socket.off === 'function') {
             Object.entries(socketListeners).forEach(([eventName, handler]) => {
                 socket.off(eventName, handler);
@@ -240,6 +241,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         cellOutcome = Array(81).fill('empty');
         setStartedUI(false);
         renderBoard();
+        syncBoardSize();
         renderMeta();
         renderKeypad();
         renderLeaderboard();
@@ -262,6 +264,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             nextBtn.style.display = active ? 'flex' : 'none';
             nextBtn.style.opacity = active ? '1' : '.7';
         }
+
+        syncBoardSize();
     }
 
     function refreshStartAvailability(notify = false) {
@@ -295,6 +299,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         resetBoardState(selectedDifficulty);
         setStartedUI(true);
         renderBoard();
+        syncBoardSize();
         renderMeta();
         renderKeypad();
         showToast(`${selectedDifficulty} Sudoku started.`);
@@ -313,6 +318,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         resetBoardState(selectedDifficulty);
         renderBoard();
+        syncBoardSize();
         renderMeta();
         renderKeypad();
         showToast(`Loaded a new ${selectedDifficulty} puzzle.`);
@@ -338,6 +344,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         setStartedUI(false);
         refreshStartAvailability();
         renderBoard();
+        syncBoardSize();
         renderMeta();
         renderKeypad();
         renderLeaderboard();
@@ -569,6 +576,32 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 selectCell(Number(cell.dataset.index));
             });
         });
+
+        syncBoardSize();
+    }
+
+    function syncBoardSize() {
+        const boardEl = gamesRoot.querySelector('#sudoku-board');
+        const boardStageEl = gamesRoot.querySelector('#sudoku-board-stage');
+        const boardPanelEl = gamesRoot.querySelector('#sudoku-board-panel');
+
+        if (!boardEl || !boardStageEl || !boardPanelEl) return;
+        if (boardStageEl.offsetParent === null) return;
+
+        const stageRect = boardStageEl.getBoundingClientRect();
+        const panelRect = boardPanelEl.getBoundingClientRect();
+
+        const horizontalPadding = Math.max(0, panelRect.width - boardStageEl.clientWidth);
+        const verticalPadding = Math.max(0, panelRect.height - boardStageEl.clientHeight);
+        const reservedHeaderHeight = Math.max(54, panelRect.height - boardStageEl.clientHeight - verticalPadding);
+        const availableWidth = Math.max(180, stageRect.width);
+        const availableHeight = Math.max(180, panelRect.height - reservedHeaderHeight - 20);
+        const boardSize = Math.floor(Math.max(180, Math.min(availableWidth, availableHeight)));
+
+        boardEl.style.width = `${boardSize}px`;
+        boardEl.style.height = `${boardSize}px`;
+        boardEl.style.maxWidth = '100%';
+        boardEl.style.maxHeight = '100%';
     }
 
     function renderKeypad() {
@@ -814,13 +847,15 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 </div>
 
                 <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
-                  <div class="glass-panel" style="width:min(100%, 700px); height:min(100%, 700px); max-width:100%; max-height:100%; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                  <div id="sudoku-board-panel" class="glass-panel" style="width:min(100%, 700px); height:100%; max-width:100%; max-height:100%; padding:14px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                       <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Shared Puzzle Surface</div>
                       <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Pick a difficulty and press Start to generate a random puzzle.</div>
                     </div>
 
-                    <div id="sudoku-board" style="flex:1; min-height:0; display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
+                    <div id="sudoku-board-stage" style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                      <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -904,10 +939,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         renderKeypad();
         renderLeaderboard();
         renderMeta();
+        syncBoardSize();
     }
 
     renderShell();
     window.addEventListener('keydown', onWindowKeyDown);
+    window.addEventListener('resize', syncBoardSize);
     if (socket && typeof socket.on === 'function') {
         Object.entries(socketListeners).forEach(([eventName, handler]) => {
             socket.on(eventName, handler);
