@@ -11,6 +11,12 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
                     <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
                         <button id="pict-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-forward"></i> Next Round</button>
+                        <button id="pict-end" class="btn-icon" title="End Round">
+                          <i class="fa-solid fa-flag-checkered"></i>
+                        </button>
+                        <button id="pict-back" class="btn-icon" title="Back to Arcade">
+                          <i class="fa-solid fa-arrow-left"></i>
+                        </button>
           </div>
         </div>
 
@@ -23,7 +29,12 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
                             <button id="pict-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;"><i class="fa-solid fa-play" style="font-size:1rem;"></i> Start</button>
             </div>
             <div class="glass-panel" style="padding:10px; text-align:left;">
-              <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                <div style="font-weight:800;">Leaderboard</div>
+                <button id="pict-reset-scores" class="btn-icon" title="Reset Scores">
+                  <i class="fa-solid fa-rotate-right"></i>
+                </button>
+              </div>
               <div id="pict-wait-scores" style="max-height:170px; overflow:auto;">-</div>
             </div>
           </div>
@@ -93,6 +104,9 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const waitStartBtn = document.getElementById('pict-wait-start');
     const waitHintEl = document.getElementById('pict-wait-hint');
     const nextBtn = document.getElementById('pict-next');
+    const endBtn = document.getElementById('pict-end');
+    const backBtn = document.getElementById('pict-back');
+    const resetScoresBtn = document.getElementById('pict-reset-scores');
 
     const waitingEl = document.getElementById('pict-waiting');
     const liveAreaEl = document.getElementById('pict-live-area');
@@ -143,6 +157,10 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         logEl.scrollTop = logEl.scrollHeight;
     }
 
+    function resetRoundLog() {
+        logEl.innerHTML = '';
+    }
+
     function resetLocalRoomView() {
         drawerId = null;
         drawerName = null;
@@ -154,7 +172,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         clearBoard();
         setRoundUI(false);
 
-        logEl.innerHTML = '';
+        resetRoundLog();
         appendGameMsg('Game ready. Waiting for start.', 'system');
         updateStatus();
     }
@@ -201,6 +219,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         liveAreaEl.style.display = roundActive ? 'flex' : 'none';
 
         nextBtn.style.display = roundActive ? 'flex' : 'none';
+        endBtn.style.display = roundActive ? 'flex' : 'none';
 
         if (!roundActive) {
             myWord = null;
@@ -462,12 +481,63 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
     waitStartBtn.addEventListener('click', openWordModal);
     nextBtn.addEventListener('click', openWordModal);
+    endBtn.addEventListener('click', () => {
+        if (!roundActive) return;
+        const nickname = getDisplayName();
+        if (!nickname) return;
+        syncProfile();
+        socket.emit('pict-end-round', { nickname });
+    });
 
     modalConfirmBtn.addEventListener('click', confirmStart);
     modalCancelBtn.addEventListener('click', closeWordModal);
     modalWordEl.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') confirmStart();
     });
+
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            if (typeof window.initArcadeGames !== 'function') return;
+            window.initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId });
+        });
+    }
+
+    if (resetScoresBtn) {
+        resetScoresBtn.addEventListener('click', () => {
+            const roomId = getJoinedRoomId();
+            const nickname = getDisplayName();
+            const icon = resetScoresBtn.querySelector('i');
+
+            if (!roomId) {
+                showToast('Please join a room first');
+                return;
+            }
+
+            if (!nickname) {
+                showToast('Please log in before resetting scores');
+                return;
+            }
+
+            resetScoresBtn.disabled = true;
+            resetScoresBtn.style.opacity = '.7';
+
+            if (icon) {
+                icon.style.transition = 'transform .35s ease';
+                icon.style.transform = 'rotate(180deg)';
+            }
+
+            syncProfile();
+            socket.emit('pict-reset-scores');
+
+            setTimeout(() => {
+                resetScoresBtn.disabled = false;
+                resetScoresBtn.style.opacity = '1';
+                if (icon) {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }, 450);
+        });
+    }
 
     guessBtn.addEventListener('click', sendGuess);
     guessEl.addEventListener('keypress', (event) => {
@@ -517,6 +587,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         setRoundUI(!!state.roundActive);
 
         if (!wasRoundActive && state.roundActive) {
+            resetRoundLog();
             const drawerText = drawerId === socket.id ? 'You' : (drawerName || 'Unknown');
             appendGameMsg(`Round is already in progress. Drawer: ${drawerText}`, 'system');
         }
@@ -531,6 +602,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         myWord = null;
         clearBoard();
         setRoundUI(true);
+        resetRoundLog();
         appendGameMsg(`Round started. Drawer: ${nextDrawerId === socket.id ? 'You' : (drawerName || 'Unknown')}`, 'system');
         updateStatus();
     });

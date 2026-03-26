@@ -76,6 +76,14 @@ function emitPictState(io, roomId, state) {
   });
 }
 
+function resetPictScores(io, roomId, state) {
+  Object.keys(state.scores).forEach((playerId) => {
+    state.scores[playerId] = 0;
+  });
+
+  emitPictState(io, roomId, state);
+}
+
 function getSocketRoomId(socket) {
   return socket.data?.pictRoomId || null;
 }
@@ -325,6 +333,14 @@ function registerPictionaryHandlers(io, socket) {
       endedBy: getPlayerName(state, socket.id),
       manual: true,
     });
+  });
+
+  socket.on('pict-reset-scores', () => {
+    if (!isPictMember(socket)) return;
+
+    const roomId = getSocketRoomId(socket);
+    const state = getState(roomId);
+    resetPictScores(io, roomId, state);
   });
 
   socket.on('pict-request-history', () => {
