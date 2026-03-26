@@ -161,6 +161,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         return user ? (user.nickname || user.username || 'Guest') : 'Guest';
     }
 
+    function getCurrentPlayerKey() {
+        const user = getCurrentUser ? getCurrentUser() : null;
+        return user && user.id ? String(user.id) : (socket ? socket.id : null);
+    }
+
     function getJoinedRoomId() {
         const roomId = getCurrentRoomId ? getCurrentRoomId() : null;
         return roomId ? roomId.trim() : null;
@@ -719,7 +724,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 item.style.padding = '3px 0';
 
                 const left = document.createElement('span');
-                left.textContent = `#${index + 1} ${row.id === socket.id ? 'You' : (row.name || 'Guest')}`;
+                left.textContent = `#${index + 1} ${row.id === getCurrentPlayerKey() ? 'You' : (row.name || 'Guest')}`;
 
                 const right = document.createElement('strong');
                 right.textContent = String(row.score || 0);
@@ -779,7 +784,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         if (scoreEl) {
-            const me = leaderboard.find((item) => item.id === socket.id);
+            const me = leaderboard.find((item) => item.id === getCurrentPlayerKey());
             scoreEl.textContent = String(me ? Number(me.score || 0) : 0);
         }
 

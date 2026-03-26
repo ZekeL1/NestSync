@@ -12,6 +12,19 @@ function displayName(name) {
   return cleaned || 'Guest';
 }
 
+function getPlayerKey(socket) {
+  const authUserId = sanitizeWord(socket?.data?.auth?.userId, 80);
+  return authUserId || socket.id;
+}
+
+function getSocketDisplayName(socket) {
+  return displayName(
+    socket?.data?.auth?.displayName ||
+    socket?.data?.auth?.username ||
+    'Guest'
+  );
+}
+
 function sanitizeDigit(value, allowZero = true) {
   const number = Number(value);
   if (!Number.isInteger(number)) return null;
@@ -68,26 +81,39 @@ function getSocketRoomId(socket) {
   return socket.data?.sudokuRoomId || null;
 }
 
-function getMembersOfSudokuRoom(io, roomId) {
-  const room = io.sockets.adapter.rooms.get(getRoomChannel(roomId));
+function getMembersOfRoom(io, roomId) {
+  const room = io.sockets.adapter.rooms.get(roomId);
   return room ? Array.from(room) : [];
 }
 
 function cleanupRoomStateIfEmpty(io, roomId) {
-  const members = io.sockets.adapter.rooms.get(getRoomChannel(roomId));
+  const members = io.sockets.adapter.rooms.get(roomId);
   if (!members || members.size === 0) {
     ROOM_STATES.delete(roomId);
   }
 }
 
 function buildLeaderboard(io, roomId, state) {
-  const members = getMembersOfSudokuRoom(io, roomId);
+  const members = getMembersOfRoom(io, roomId);
+  const seen = new Set();
+
   return members
-    .map((id) => ({
-      id,
-      name: displayName(state.playerNames[id]),
-      score: state.scores[id] || 0,
-    }))
+    .map((socketId) => io.sockets.sockets.get(socketId))
+    .filter(Boolean)
+    .map((memberSocket) => {
+      const id = getPlayerKey(memberSocket);
+      if (seen.has(id)) {
+        return null;
+      }
+      seen.add(id);
+
+      return {
+        id,
+        name: displayName(state.playerNames[id] || getSocketDisplayName(memberSocket)),
+        score: state.scores[id] || 0,
+      };
+    })
+    .filter(Boolean)
     .sort((left, right) => {
       if (right.score !== left.score) return right.score - left.score;
       return left.name.localeCompare(right.name);
@@ -146,10 +172,20 @@ function resetGameState(state, difficulty = null) {
   state.startedAt = null;
 }
 
-function joinSudokuRoom(io, socket, roomId, nickname) {
-  const nextName = sanitizeWord(nickname, 24);
-  if (!nextName) return null;
+function syncPlayerState(state, socket, nickname) {
+  const playerKey = getPlayerKey(socket);
+  const nextName = sanitizeWord(nickname, 24) || getSocketDisplayName(socket);
 
+  state.playerNames[playerKey] = nextName;
+  if (typeof state.scores[playerKey] !== 'number') {
+    state.scores[playerKey] = 0;
+  }
+
+  socket.data.sudokuPlayerKey = playerKey;
+  return playerKey;
+}
+
+function joinSudokuRoom(io, socket, roomId, nickname) {
   const previousRoomId = getSocketRoomId(socket);
   if (previousRoomId && previousRoomId !== roomId) {
     leaveSudokuRoom(io, socket);
@@ -158,10 +194,7 @@ function joinSudokuRoom(io, socket, roomId, nickname) {
   const state = getState(roomId);
   socket.data.sudokuRoomId = roomId;
   socket.join(getRoomChannel(roomId));
-  state.playerNames[socket.id] = nextName;
-  if (typeof state.scores[socket.id] !== 'number') {
-    state.scores[socket.id] = 0;
-  }
+  syncPlayerState(state, socket, nickname);
   return state;
 }
 
@@ -169,11 +202,14 @@ function leaveSudokuRoom(io, socket) {
   const roomId = getSocketRoomId(socket);
   if (!roomId) return;
 
-  const state = getState(roomId);
+  const state = ROOM_STATES.get(roomId);
   socket.leave(getRoomChannel(roomId));
-  delete state.playerNames[socket.id];
-  delete state.scores[socket.id];
   socket.data.sudokuRoomId = null;
+  socket.data.sudokuPlayerKey = null;
+
+  if (state) {
+    emitStateToRoom(io, roomId, state);
+  }
   cleanupRoomStateIfEmpty(io, roomId);
 }
 
@@ -240,7 +276,7 @@ function startRound(io, socket, payload) {
     return;
   }
 
-  const nextName = sanitizeWord(payload.nickname, 24);
+  const nextName = sanitizeWord(payload.nickname, 24) || getSocketDisplayName(socket);
   if (!nextName) {
     socket.emit('sudoku-error', { message: 'Please log in before starting Sudoku' });
     return;
@@ -253,10 +289,7 @@ function startRound(io, socket, payload) {
   }
 
   const state = getState(roomId);
-  state.playerNames[socket.id] = nextName;
-  if (typeof state.scores[socket.id] !== 'number') {
-    state.scores[socket.id] = 0;
-  }
+  syncPlayerState(state, socket, nextName);
 
   state.started = true;
   state.difficulty = validation.data.difficulty;
@@ -278,6 +311,12 @@ function startRound(io, socket, payload) {
   });
 
   emitStateToRoom(io, roomId, state);
+}
+
+function broadcastRoomStateIfActive(io, roomId) {
+  const cleanRoomId = sanitizeWord(roomId, 24);
+  if (!cleanRoomId || !ROOM_STATES.has(cleanRoomId)) return;
+  emitStateToRoom(io, cleanRoomId, ROOM_STATES.get(cleanRoomId));
 }
 
 function registerSudokuHandlers(io, socket) {
@@ -304,10 +343,14 @@ function registerSudokuHandlers(io, socket) {
     if (currentRoomId && currentRoomId !== targetRoomId) {
       leaveSudokuRoom(io, socket);
     }
+
+    broadcastRoomStateIfActive(io, targetRoomId);
   });
 
-  socket.on('leave-room', () => {
+  socket.on('leave-room', (roomId) => {
+    const targetRoomId = sanitizeWord(roomId, 24) || getSocketRoomId(socket);
     leaveSudokuRoom(io, socket);
+    broadcastRoomStateIfActive(io, targetRoomId);
   });
 
   socket.on('sudoku-start', (payload = {}) => {
@@ -369,13 +412,7 @@ function registerSudokuHandlers(io, socket) {
       return;
     }
 
-    const nextName = sanitizeWord(nickname, 24);
-    if (nextName) {
-      state.playerNames[socket.id] = nextName;
-    }
-    if (typeof state.scores[socket.id] !== 'number') {
-      state.scores[socket.id] = 0;
-    }
+    const playerKey = syncPlayerState(state, socket, nickname);
 
     const previousValue = state.values[nextIndex];
     if (previousValue === nextValue) return;
@@ -384,9 +421,9 @@ function registerSudokuHandlers(io, socket) {
 
     if (nextValue !== 0) {
       if (nextValue === state.solution[nextIndex]) {
-        state.scores[socket.id] += 2;
+        state.scores[playerKey] += 2;
       } else {
-        state.scores[socket.id] -= 1;
+        state.scores[playerKey] -= 1;
       }
     }
 
@@ -398,7 +435,7 @@ function registerSudokuHandlers(io, socket) {
       io.to(getRoomChannel(roomId)).emit('sudoku-complete', {
         roomId,
         roundNumber: state.roundNumber,
-        completedBy: displayName(state.playerNames[socket.id]),
+        completedBy: displayName(state.playerNames[playerKey]),
       });
     }
   });
@@ -413,7 +450,8 @@ function registerSudokuHandlers(io, socket) {
     const state = getState(roomId);
     if (!state.started && !state.completed) return;
 
-    const endedBy = displayName(nickname || state.playerNames[socket.id]);
+    const playerKey = getPlayerKey(socket);
+    const endedBy = displayName(nickname || state.playerNames[playerKey] || getSocketDisplayName(socket));
     resetGameState(state, state.difficulty);
     io.to(getRoomChannel(roomId)).emit('sudoku-ended', {
       roomId,
@@ -421,6 +459,22 @@ function registerSudokuHandlers(io, socket) {
       endedBy,
     });
     emitStateToRoom(io, roomId, state);
+  });
+
+  socket.on('disconnecting', () => {
+    const roomIds = Array.from(socket.rooms).filter((roomId) => (
+      roomId &&
+      roomId !== socket.id &&
+      !roomId.startsWith(SUDOKU_PREFIX)
+    ));
+
+    if (!roomIds.length) return;
+
+    setTimeout(() => {
+      roomIds.forEach((roomId) => {
+        broadcastRoomStateIfActive(io, roomId);
+      });
+    }, 0);
   });
 
   socket.on('disconnect', () => {
