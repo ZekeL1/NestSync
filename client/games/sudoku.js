@@ -943,9 +943,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                       <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
                     </div>
 
-                    <div style="position:relative; width:100%; flex:1; min-height:0; padding:6px; box-sizing:border-box; border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(245,240,255,.82)); border:1px solid rgba(108,92,231,.18); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);">
-                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:14px;">
-                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); grid-template-rows:repeat(9, 1fr); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 22px rgba(108,92,231,.08);"></div>
+                    <div style="position:relative; width:100%; flex:1; min-height:0; padding:2px; box-sizing:border-box; border-radius:18px; overflow:hidden; background:#fff; border:1px solid rgba(108,92,231,.18); box-shadow:0 10px 24px rgba(108,92,231,.08);">
+                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:16px; background:#fff;">
+                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); grid-template-rows:repeat(9, 1fr); overflow:hidden; background:transparent;"></div>
                       </div>
                     </div>
                 </div>
