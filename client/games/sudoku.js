@@ -658,7 +658,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         const availableWidth = Math.max(220, boardStageEl.clientWidth);
         const availableHeight = Math.max(220, boardStageEl.clientHeight);
-        const boardSize = Math.floor(Math.max(220, Math.min(availableWidth, availableHeight) - 6));
+        const boardSize = Math.floor(Math.max(220, Math.min(availableWidth, availableHeight)));
         const cellFontSize = Math.max(18, Math.floor((boardSize / 9) * 0.42));
 
         boardEl.style.width = `${boardSize}px`;
@@ -941,11 +941,9 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                       <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
                     </div>
 
-                    <div style="position:relative; border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(255,255,255,.66), rgba(245,240,255,.86)); border:1px solid rgba(108,92,231,.22); box-shadow:inset 0 1px 0 rgba(255,255,255,.55); flex:1; min-height:0; padding:6px; box-sizing:border-box;">
-                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:2px; box-sizing:border-box;">
-                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:16px; overflow:hidden; background:#fff; border:1px solid rgba(108,92,231,.12); box-shadow:0 16px 32px rgba(108,92,231,.10);"></div>
+                    <div id="sudoku-board-stage" style="position:relative; width:100%; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:18px; background:rgba(255,255,255,.24);">
+                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:18px; overflow:hidden; background:#fff;"></div>
                       </div>
-                    </div>
                 </div>
                 </div>
               </div>
