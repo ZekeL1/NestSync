@@ -922,14 +922,14 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   </div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px; margin-bottom:14px; text-align:left;">
-                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
-                  <div data-sudoku-scoreboard style="max-height:160px; overflow:auto;">-</div>
-                </div>
-
                 <div class="glass-panel" style="padding:14px; text-align:left;">
                   <div style="font-weight:800; margin-bottom:10px;">Difficulty</div>
                   <div id="sudoku-difficulty-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+                </div>
+
+                <div class="glass-panel" style="padding:14px; margin-top:14px; text-align:left;">
+                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+                  <div data-sudoku-scoreboard style="max-height:160px; overflow:auto;">-</div>
                 </div>
               </div>
             </div>
@@ -981,13 +981,13 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 </div>
 
                 <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
-                  <div data-sudoku-scoreboard style="max-height:140px; overflow:auto;">-</div>
+                  <div style="font-weight:800; margin-bottom:10px;">Keypad</div>
+                  <div id="sudoku-keypad" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
                 </div>
 
                 <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:10px;">Keypad</div>
-                  <div id="sudoku-keypad" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+                  <div data-sudoku-scoreboard style="max-height:140px; overflow:auto;">-</div>
                 </div>
 
               </div>
