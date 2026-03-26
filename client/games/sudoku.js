@@ -336,7 +336,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         socket.emit('sudoku-request-state', { roomId, nickname });
     }
 
-    function refreshSudokuScores(notify = false) {
+    function resetSudokuScores(notify = false) {
         const roomId = getJoinedRoomId();
         const nickname = getDisplayName();
         const refreshBtn = gamesRoot.querySelector('#sudoku-refresh-scores');
@@ -363,7 +363,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         }
 
         socket.emit('sudoku-set-profile', { roomId, nickname });
-        socket.emit('sudoku-request-state', { roomId, nickname });
+        socket.emit('sudoku-reset-scores');
 
         setTimeout(() => {
             if (refreshBtn) {
@@ -973,7 +973,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 <div class="glass-panel" style="padding:14px; margin-top:14px; text-align:left;">
                   <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
                     <div style="font-weight:800;">Leaderboard</div>
-                    <button id="sudoku-refresh-scores" class="btn-icon" title="Refresh Scores">
+                    <button id="sudoku-refresh-scores" class="btn-icon" title="Reset Scores">
                       <i class="fa-solid fa-rotate-right"></i>
                     </button>
                   </div>
@@ -1071,7 +1071,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (refreshScoresBtn) {
             refreshScoresBtn.addEventListener('click', () => {
-                refreshSudokuScores(true);
+                resetSudokuScores(true);
             });
         }
 
