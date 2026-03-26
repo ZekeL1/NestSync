@@ -927,7 +927,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             </div>
 
             <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px); min-height:0;">
-              <div style="flex:1; min-width:520px; display:flex; flex-direction:column; gap:12px; min-height:0;">
+              <div style="flex:1; min-width:520px;">
+                <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
                 <div class="glass-panel" style="padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                   <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Interactive Board</div>
 
@@ -945,17 +946,21 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   </div>
                 </div>
 
-                <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
-                  <div id="sudoku-board-panel" class="glass-panel" style="width:min(100%, 700px); height:100%; max-width:100%; max-height:100%; padding:14px; display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                      <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Shared Puzzle Surface</div>
-                      <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Waiting</div>
+                <div id="sudoku-board-panel" style="display:flex; flex-direction:column; gap:10px; flex:1; min-height:0;">
+                    <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                      <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
+                        <i class="fa-solid fa-table-cells"></i>
+                        <span>Puzzle Board</span>
+                      </div>
+                      <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
                     </div>
 
-                    <div id="sudoku-board-stage" style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-                      <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
+                    <div style="position:relative; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.5); border:2px solid rgba(108,92,231,.36); flex:1; min-height:0; padding:10px; box-sizing:border-box;">
+                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 24px rgba(108,92,231,.08);"></div>
+                      </div>
                     </div>
-                  </div>
+                </div>
                 </div>
               </div>
 
