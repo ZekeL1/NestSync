@@ -620,7 +620,6 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 class="sudoku-cell"
                 data-index="${index}"
                 style="
-                  aspect-ratio:1;
                   border:none;
                   border-right:1px solid rgba(108,92,231,.12);
                   border-bottom:1px solid rgba(108,92,231,.12);
@@ -631,6 +630,8 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                   font-size:var(--sudoku-cell-size, 1.35rem);
                   font-weight:${fontWeight};
                   cursor:pointer;
+                  width:100%;
+                  height:100%;
                   transition:.15s;
                 "
               >
@@ -658,11 +659,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         const availableWidth = Math.max(220, boardStageEl.clientWidth);
         const availableHeight = Math.max(220, boardStageEl.clientHeight);
-        const boardSize = Math.floor(Math.max(220, Math.min(availableWidth, availableHeight)));
-        const cellFontSize = Math.max(18, Math.floor((boardSize / 9) * 0.42));
+        const boardWidth = Math.floor(availableWidth);
+        const boardHeight = Math.floor(availableHeight);
+        const cellFontSize = Math.max(18, Math.floor((Math.min(boardWidth / 9, boardHeight / 9)) * 0.42));
 
-        boardEl.style.width = `${boardSize}px`;
-        boardEl.style.height = `${boardSize}px`;
+        boardEl.style.width = `${boardWidth}px`;
+        boardEl.style.height = `${boardHeight}px`;
         boardEl.style.maxWidth = '100%';
         boardEl.style.maxHeight = '100%';
         boardEl.style.setProperty('--sudoku-cell-size', `${cellFontSize}px`);
@@ -941,9 +943,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                       <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
                     </div>
 
-                    <div id="sudoku-board-stage" style="position:relative; width:100%; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:18px; background:rgba(255,255,255,.24);">
-                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); border-radius:18px; overflow:hidden; background:#fff;"></div>
+                    <div style="position:relative; width:100%; flex:1; min-height:0; padding:6px; box-sizing:border-box; border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(245,240,255,.82)); border:1px solid rgba(108,92,231,.18); box-shadow:inset 0 1px 0 rgba(255,255,255,.5);">
+                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:14px;">
+                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); grid-template-rows:repeat(9, 1fr); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 22px rgba(108,92,231,.08);"></div>
                       </div>
+                    </div>
                 </div>
                 </div>
               </div>
