@@ -336,6 +336,46 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         socket.emit('sudoku-request-state', { roomId, nickname });
     }
 
+    function refreshSudokuScores(notify = false) {
+        const roomId = getJoinedRoomId();
+        const nickname = getDisplayName();
+        const refreshBtn = gamesRoot.querySelector('#sudoku-refresh-scores');
+        const refreshIcon = refreshBtn ? refreshBtn.querySelector('i') : null;
+
+        if (!roomId) {
+            if (notify) showToast('Please join a room first');
+            return;
+        }
+
+        if (!socket || !socket.connected || !nickname) {
+            if (notify) showToast('Server connection is required for Sudoku.');
+            return;
+        }
+
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.style.opacity = '.7';
+        }
+
+        if (refreshIcon) {
+            refreshIcon.style.transition = 'transform .35s ease';
+            refreshIcon.style.transform = 'rotate(180deg)';
+        }
+
+        socket.emit('sudoku-set-profile', { roomId, nickname });
+        socket.emit('sudoku-request-state', { roomId, nickname });
+
+        setTimeout(() => {
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.style.opacity = '1';
+            }
+            if (refreshIcon) {
+                refreshIcon.style.transform = 'rotate(0deg)';
+            }
+        }, 450);
+    }
+
     function applyServerState(state) {
         if (!state) return;
 
@@ -1031,7 +1071,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (refreshScoresBtn) {
             refreshScoresBtn.addEventListener('click', () => {
-                requestSudokuState();
+                refreshSudokuScores(true);
             });
         }
 
