@@ -794,7 +794,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               </div>
             </div>
 
-            <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px);">
+            <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px); min-height:0;">
               <div style="flex:1; min-width:520px; display:flex; flex-direction:column; gap:12px; min-height:0;">
                 <div class="glass-panel" style="padding:12px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                   <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Interactive Board</div>
@@ -814,13 +814,13 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 </div>
 
                 <div style="flex:1; min-height:0; display:flex; align-items:center; justify-content:center;">
-                  <div class="glass-panel" style="width:min(100%, 700px); aspect-ratio:1; padding:14px; display:flex; flex-direction:column; gap:10px;">
+                  <div class="glass-panel" style="width:min(100%, 700px); height:min(100%, 700px); max-width:100%; max-height:100%; padding:14px; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                       <div style="font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:#6c5ce7;">Shared Puzzle Surface</div>
                       <div id="sudoku-hint" style="font-size:.9rem; opacity:.74;">Pick a difficulty and press Start to generate a random puzzle.</div>
                     </div>
 
-                    <div id="sudoku-board" style="flex:1; display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
+                    <div id="sudoku-board" style="flex:1; min-height:0; display:grid; grid-template-columns:repeat(9, 1fr); border:2px solid rgba(108,92,231,.32); border-radius:18px; overflow:hidden; background:rgba(255,255,255,.8);"></div>
                   </div>
                 </div>
               </div>
