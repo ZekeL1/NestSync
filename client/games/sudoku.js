@@ -879,9 +879,17 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 <div id="sudoku-status" class="status-pill offline">Ready</div>
               </div>
 
-              <button id="sudoku-back" class="btn-icon" title="Back to Arcade">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
+              <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
+                <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
+                  <i class="fa-solid fa-forward"></i> Next Puzzle
+                </button>
+                <button id="sudoku-end" class="btn-icon" title="End Game">
+                  <i class="fa-solid fa-flag-checkered"></i>
+                </button>
+                <button id="sudoku-back" class="btn-icon" title="Back to Arcade">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+              </div>
             </div>
 
             <div id="sudoku-waiting" class="glass-panel" style="height:calc(100% - 58px); display:flex; align-items:center; justify-content:center; text-align:center;">
@@ -929,15 +937,6 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px); min-height:0;">
               <div style="flex:1; min-width:520px;">
                 <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
-                <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
-                  <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
-                    <i class="fa-solid fa-forward"></i> Next Puzzle
-                  </button>
-                  <button id="sudoku-end" class="btn-icon" title="End Game">
-                    <i class="fa-solid fa-flag-checkered"></i>
-                  </button>
-                </div>
-
                 <div id="sudoku-board-panel" style="display:flex; flex-direction:column; gap:10px; flex:1; min-height:0;">
                     <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                       <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
