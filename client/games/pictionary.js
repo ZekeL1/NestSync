@@ -11,6 +11,9 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
                     <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
                         <button id="pict-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-forward"></i> Next Round</button>
+                        <button id="pict-end" class="btn-icon" title="End Round">
+                          <i class="fa-solid fa-flag-checkered"></i>
+                        </button>
                         <button id="pict-back" class="btn-icon" title="Back to Arcade">
                           <i class="fa-solid fa-arrow-left"></i>
                         </button>
@@ -96,6 +99,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     const waitStartBtn = document.getElementById('pict-wait-start');
     const waitHintEl = document.getElementById('pict-wait-hint');
     const nextBtn = document.getElementById('pict-next');
+    const endBtn = document.getElementById('pict-end');
     const backBtn = document.getElementById('pict-back');
 
     const waitingEl = document.getElementById('pict-waiting');
@@ -205,6 +209,7 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         liveAreaEl.style.display = roundActive ? 'flex' : 'none';
 
         nextBtn.style.display = roundActive ? 'flex' : 'none';
+        endBtn.style.display = roundActive ? 'flex' : 'none';
 
         if (!roundActive) {
             myWord = null;
@@ -466,6 +471,13 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
 
     waitStartBtn.addEventListener('click', openWordModal);
     nextBtn.addEventListener('click', openWordModal);
+    endBtn.addEventListener('click', () => {
+        if (!roundActive) return;
+        const nickname = getDisplayName();
+        if (!nickname) return;
+        syncProfile();
+        socket.emit('pict-end-round', { nickname });
+    });
 
     modalConfirmBtn.addEventListener('click', confirmStart);
     modalCancelBtn.addEventListener('click', closeWordModal);

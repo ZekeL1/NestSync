@@ -261,6 +261,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const waitingEl = gamesRoot.querySelector('#sudoku-waiting');
         const liveAreaEl = gamesRoot.querySelector('#sudoku-live-area');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
+        const endBtn = gamesRoot.querySelector('#sudoku-end');
 
         if (waitingEl) {
             waitingEl.style.display = active ? 'none' : 'flex';
@@ -273,6 +274,11 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         if (nextBtn) {
             nextBtn.style.display = active ? 'flex' : 'none';
             nextBtn.style.opacity = active ? '1' : '.7';
+        }
+
+        if (endBtn) {
+            endBtn.style.display = active ? 'flex' : 'none';
+            endBtn.style.opacity = active ? '1' : '.7';
         }
 
         syncBoardSize();
@@ -925,7 +931,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
                 </div>
 
                 <div class="glass-panel" style="padding:14px; margin-top:14px; text-align:left;">
-                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
+                    <div style="font-weight:800;">Leaderboard</div>
+                    <button id="sudoku-refresh-scores" class="btn-icon" title="Refresh Scores">
+                      <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                  </div>
                   <div data-sudoku-scoreboard style="max-height:160px; overflow:auto;">-</div>
                 </div>
               </div>
@@ -996,6 +1007,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         const waitStartBtn = gamesRoot.querySelector('#sudoku-wait-start');
         const nextBtn = gamesRoot.querySelector('#sudoku-next');
         const endBtn = gamesRoot.querySelector('#sudoku-end');
+        const refreshScoresBtn = gamesRoot.querySelector('#sudoku-refresh-scores');
 
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -1015,6 +1027,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         if (endBtn) {
             endBtn.addEventListener('click', handleEndGame);
+        }
+
+        if (refreshScoresBtn) {
+            refreshScoresBtn.addEventListener('click', () => {
+                requestSudokuState();
+            });
         }
 
         renderDifficultyButtons();
