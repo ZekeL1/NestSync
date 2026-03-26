@@ -53,6 +53,27 @@ Tests for user registration: validation and Cognito integration.
 | Invalid username format | Returns 400 when username is shorter than 3 characters |
 | Valid payload | Calls Cognito and returns 201 when all fields are valid |
 
+### 4. `roomService.test.js`
+
+Uses the **memory** room store (`ROOM_STORE=memory`). Each test clears the in-memory store via `clearForTests()`.
+
+| Test | Description |
+|------|-------------|
+| Creates a room for parent | Returns a 4-digit `roomId` |
+| Empty password string | Treated as no room password (`requiresPassword` false) |
+| Parent access | Parent can access their own room |
+| Missing room | `NOT_FOUND` / 404 for bogus `roomId` |
+| Wrong parent | `NOT_ROOM_PARENT` / 403 if another user joins as parent |
+| Wrong child password | `BAD_PASSWORD` / 401 |
+| Child binding | First child binds; second child `ROOM_FULL` |
+| Child rejoin | Bound child can rejoin without password |
+| Parent as child role | `BAD_ROLE` if parent `sub` used as child |
+| Unknown role | e.g. `teacher` → `BAD_ROLE` / 400 |
+| `getRoomMeta` | `exists`, `requiresPassword`, `hasChild`, `status` |
+| Missing room meta | `exists: false` |
+| Chat | Single message persisted |
+| Multiple messages | Order preserved (`a` then `b`) |
+
 ## Running Tests
 
 ```bash

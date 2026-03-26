@@ -34,6 +34,7 @@ let lastTime = 0;
 let localStream = null;
 let peerConnection = null;
 let isIntentionalReconnect = false;
+let pendingRoomCreation = false;
 
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
@@ -294,9 +295,15 @@ function reopenLogin() {
   showOnlyForm("login");
 }
 
+function resetChatPanel() {
+  if (!chatMessages) return;
+  chatMessages.innerHTML = '<div class="chat-msg system"><span>Welcome to chat!</span></div>';
+}
+
 function cleanupRoomSession() {
   currentRoomId = null;
   resetRoomUi();
+  resetChatPanel();
   if (remoteVideo) remoteVideo.srcObject = null;
   if (peerConnection) {
     peerConnection.close();
@@ -595,18 +602,18 @@ socket.on("server:error", (payload) => {
   showToast(message);
 });
 
-socket.on("room-created", (roomId) => {
+socket.on("room-joined", async (roomId) => {
   currentRoomId = roomId;
   inputRoomId.value = roomId;
-  setRoomConnectedState("Host");
-  showToast(`Room created: ${roomId}`);
-});
-
-socket.on("room-joined", (roomId) => {
-  currentRoomId = roomId;
-  inputRoomId.value = roomId;
-  setRoomConnectedState("Connected");
-  showToast(`Joined room: ${roomId}`);
+  const wasHost = pendingRoomCreation;
+  if (pendingRoomCreation) {
+    setRoomConnectedState("Host");
+    pendingRoomCreation = false;
+  } else {
+    setRoomConnectedState("Connected");
+  }
+  showToast(wasHost ? `Room created: ${roomId}` : `Joined room: ${roomId}`);
+  await loadChatHistory(roomId);
 });
 
 socket.on("room-left", () => {
@@ -624,15 +631,34 @@ socket.on("user-left", () => {
 
 document.getElementById("btn-create").addEventListener("click", async () => {
   try {
+    if (!currentAccessToken) {
+      showToast("Please log in to create a room.");
+      return;
+    }
     await callFeatureEndpoint("/features/control-playback");
-    socket.emit("create-room");
+    const pw = window.prompt("Optional room password (leave empty for none):", "");
+    if (pw === null) return;
+    const body = {};
+    if (pw && String(pw).trim()) body.password = String(pw).trim();
+    pendingRoomCreation = true;
+    const data = await requestJson("/api/rooms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentAccessToken}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!data.success) throw new Error(data.message || "Failed to create room");
+    socket.emit("join-room", { roomId: data.roomId });
   } catch (error) {
+    pendingRoomCreation = false;
     showToast(error.message);
   }
 });
 
 if (joinRoomButton) {
-  joinRoomButton.addEventListener("click", () => {
+  joinRoomButton.addEventListener("click", async () => {
     if (currentRoomId) {
       leaveCurrentRoom();
       return;
@@ -640,8 +666,55 @@ if (joinRoomButton) {
 
     const roomId = inputRoomId.value.trim();
     if (!roomId) return;
-    socket.emit("join-room", roomId);
+    if (!currentAccessToken) {
+      showToast("Please log in to join a room.");
+      return;
+    }
+
+    let password;
+    try {
+      const meta = await requestJson(
+        `/api/rooms/${encodeURIComponent(roomId)}/meta`,
+        {
+          headers: { Authorization: `Bearer ${currentAccessToken}` }
+        }
+      );
+      if (!meta.exists) {
+        showToast("Room not found.");
+        return;
+      }
+      if (meta.requiresPassword) {
+        const pw = window.prompt("Enter room password:");
+        if (pw === null) return;
+        password = pw;
+      }
+    } catch (error) {
+      showToast(error.message);
+      return;
+    }
+
+    socket.emit("join-room", { roomId, password });
   });
+}
+
+async function loadChatHistory(roomId) {
+  if (!currentAccessToken || !roomId) return;
+  try {
+    const data = await requestJson(
+      `/api/rooms/${encodeURIComponent(roomId)}/messages`,
+      {
+        headers: { Authorization: `Bearer ${currentAccessToken}` }
+      }
+    );
+    resetChatPanel();
+    for (const m of data.messages || []) {
+      const isLocal = currentUser && m.senderId === currentUser.id;
+      appendMessage(m.text, isLocal ? "local" : "remote", m.nickname || "");
+    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function appendMessage(text, type, senderName = "") {

@@ -1,6 +1,7 @@
 const { extractBearerToken } = require("../auth/middleware");
 const { verifyToken } = require("../auth/tokenService");
 const { registerGameHandlers } = require("../../games");
+const roomService = require("../services/roomService");
 
 function isRoleAllowed(role, allowedRoles) {
   return allowedRoles.includes(role);
@@ -50,22 +51,53 @@ function registerSocketHandlers(io) {
       role: socket.data.auth.role
     });
 
-    socket.on("create-room", () => {
-      if (!requireRole(socket, ["parent"], "create-room")) {
-        return;
-      }
-      const roomId = Math.floor(1000 + Math.random() * 9000).toString();
-      socket.join(roomId);
-      socket.emit("room-created", roomId);
-    });
-
-    socket.on("join-room", (roomId) => {
+    socket.on("join-room", async (payload) => {
       if (!requireRole(socket, ["parent", "child"], "join-room")) {
         return;
       }
-      socket.join(roomId);
-      socket.emit("room-joined", roomId);
-      socket.to(roomId).emit("user-connected", socket.id);
+      const roomId =
+        typeof payload === "string"
+          ? payload
+          : payload && payload.roomId
+            ? String(payload.roomId).trim()
+            : "";
+      const password =
+        typeof payload === "object" && payload && payload.password !== undefined
+          ? payload.password
+          : undefined;
+
+      if (!roomId) {
+        socket.emit("server:error", {
+          event: "join-room",
+          error: "Room id is required."
+        });
+        return;
+      }
+
+      try {
+        const result = await roomService.validateRoomAccess({
+          roomId,
+          userId: socket.data.auth.userId,
+          role: socket.data.auth.role,
+          passwordPlain: password
+        });
+        if (!result.ok) {
+          socket.emit("server:error", {
+            event: "join-room",
+            error: result.message || "Cannot join room",
+            code: result.code
+          });
+          return;
+        }
+        socket.join(roomId);
+        socket.emit("room-joined", roomId);
+        socket.to(roomId).emit("user-connected", socket.id);
+      } catch (error) {
+        socket.emit("server:error", {
+          event: "join-room",
+          error: error.message || "Join failed"
+        });
+      }
     });
 
     socket.on("leave-room", (roomId) => {
@@ -90,14 +122,41 @@ function registerSocketHandlers(io) {
       });
     });
 
-    socket.on("chat-message", (data) => {
+    socket.on("chat-message", async (data) => {
       if (!requireRole(socket, ["parent", "child"], "chat-message")) {
         return;
       }
       if (!data || !data.roomId) {
         return;
       }
-      socket.to(data.roomId).emit("chat-message", data);
+      try {
+        const check = await roomService.validateRoomAccess({
+          roomId: data.roomId,
+          userId: socket.data.auth.userId,
+          role: socket.data.auth.role,
+          passwordPlain: null
+        });
+        if (!check.ok) {
+          socket.emit("server:error", {
+            event: "chat-message",
+            error: check.message || "Not allowed to chat in this room"
+          });
+          return;
+        }
+        await roomService.appendChatMessage({
+          roomId: data.roomId,
+          senderId: socket.data.auth.userId,
+          senderRole: socket.data.auth.role,
+          nickname: data.nickname || "",
+          text: data.message || ""
+        });
+        socket.to(data.roomId).emit("chat-message", data);
+      } catch (error) {
+        socket.emit("server:error", {
+          event: "chat-message",
+          error: error.message || "Chat failed"
+        });
+      }
     });
 
     socket.on("load-video", (data) => {

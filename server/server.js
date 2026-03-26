@@ -11,6 +11,7 @@ const {
 } = require('./src/services/passwordService');
 const { mountApi } = require('./src/legacy/mountApi');
 const { registerLegacySocketBridge } = require('./src/legacy/registerLegacySocketBridge');
+const roomRoutes = require('./src/routes/roomRoutes');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -19,6 +20,7 @@ const io = new Server(httpServer, { cors: { origin: "*" } });
 app.use(express.static(path.join(__dirname, '../client')));
 app.use(bodyParser.json());
 mountApi(app);
+app.use('/api/rooms', roomRoutes);
 
 // --- API 接口: 注册与登录 ---
 app.post('/api/register', async (req, res) => {
