@@ -13,6 +13,19 @@
     <div class="window-drag-bar"></div>
 
     <div id="toast-container"></div>
+
+    <div id="room-password-modal" class="room-password-modal" hidden aria-hidden="true">
+        <div class="room-password-modal-box">
+            <h3 id="room-password-modal-title" class="room-password-modal-title">Room password</h3>
+            <p id="room-password-modal-hint" class="room-password-modal-hint"></p>
+            <input type="password" id="room-password-modal-input" class="auth-input" autocomplete="off" />
+            <div class="room-password-modal-actions">
+                <button type="button" id="room-password-modal-cancel" class="btn-ghost btn-full room-password-modal-btn">Cancel</button>
+                <button type="button" id="room-password-modal-ok" class="btn-full room-password-modal-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-blob blob-1"></div>
     <div class="bg-blob blob-2"></div>
 
@@ -230,10 +243,11 @@
         </div>
     </aside>
     
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script src="games/pictionary.js"></script>
     <script src="games/sudoku.js"></script>
     <script src="games/index.js"></script>
+    <script src="runtime-config.js"></script>
     <script src="renderer.js"></script>
     <script src="ai-fairytale.js"></script>
 </body>

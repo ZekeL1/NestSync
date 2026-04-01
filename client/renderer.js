@@ -1,4 +1,38 @@
-const socket = io("http://localhost:3000", { autoConnect: false });
+function normalizeBaseUrl(raw) {
+  if (!raw) return "";
+  return String(raw).trim().replace(/\/+$/, "");
+}
+
+function inferDefaultApiBase() {
+  if (window.location && /^https?:/.test(window.location.protocol)) {
+    return normalizeBaseUrl(window.location.origin);
+  }
+  return "http://localhost:3000";
+}
+
+function resolveApiBase() {
+  const params = new URLSearchParams(window.location.search || "");
+  const fromQuery = normalizeBaseUrl(params.get("apiBase") || "");
+  if (fromQuery && window.localStorage) {
+    window.localStorage.setItem("NESTSYNC_API_BASE", fromQuery);
+  }
+  const configured =
+    fromQuery ||
+    window.NESTSYNC_API_BASE ||
+    (window.localStorage && window.localStorage.getItem("NESTSYNC_API_BASE")) ||
+    "";
+  return normalizeBaseUrl(configured) || inferDefaultApiBase();
+}
+
+const API_BASE = resolveApiBase();
+
+function resolveUrl(url) {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (!url.startsWith("/")) return `${API_BASE}/${url}`;
+  return `${API_BASE}${url}`;
+}
+
+const socket = io(API_BASE, { autoConnect: false });
 
 const navLinks = document.querySelectorAll(".nav-links li");
 const tabContents = document.querySelectorAll(".tab-content");
@@ -34,10 +68,101 @@ let lastTime = 0;
 let localStream = null;
 let peerConnection = null;
 let isIntentionalReconnect = false;
+let pendingRoomCreation = false;
 
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
+
+let roomPasswordModalResolver = null;
+
+/**
+ * Replaces window.prompt (blocked in Electron with "prompt() is and will not be supported").
+ * @param {{ title?: string, hint?: string, placeholder?: string, canSubmitEmpty?: boolean }} options
+ * @returns {Promise<string | null>} trimmed password, or null if cancelled
+ */
+function openRoomPasswordModal(options = {}) {
+  const title = options.title || "Password";
+  const hint = options.hint || "";
+  const placeholder = options.placeholder || "";
+  const canSubmitEmpty = options.canSubmitEmpty !== false;
+
+  return new Promise((resolve) => {
+    const modal = document.getElementById("room-password-modal");
+    const titleEl = document.getElementById("room-password-modal-title");
+    const hintEl = document.getElementById("room-password-modal-hint");
+    const input = document.getElementById("room-password-modal-input");
+    if (!modal || !titleEl || !hintEl || !input) {
+      resolve(null);
+      return;
+    }
+
+    roomPasswordModalResolver = resolve;
+    titleEl.textContent = title;
+    if (hint) {
+      hintEl.textContent = hint;
+      hintEl.hidden = false;
+    } else {
+      hintEl.textContent = "";
+      hintEl.hidden = true;
+    }
+    input.placeholder = placeholder || (canSubmitEmpty ? "Optional — leave empty for none" : "Required");
+    input.value = "";
+    modal.dataset.canSubmitEmpty = canSubmitEmpty ? "true" : "false";
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => input.focus(), 50);
+  });
+}
+
+function finishRoomPasswordModal(value) {
+  const modal = document.getElementById("room-password-modal");
+  if (modal) {
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+  }
+  const res = roomPasswordModalResolver;
+  roomPasswordModalResolver = null;
+  if (res) res(value);
+}
+
+(function setupRoomPasswordModal() {
+  const modal = document.getElementById("room-password-modal");
+  const input = document.getElementById("room-password-modal-input");
+  const ok = document.getElementById("room-password-modal-ok");
+  const cancel = document.getElementById("room-password-modal-cancel");
+  if (!modal || !input || !ok || !cancel) return;
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) finishRoomPasswordModal(null);
+  });
+
+  cancel.addEventListener("click", () => finishRoomPasswordModal(null));
+
+  ok.addEventListener("click", () => {
+    const canSubmitEmpty = modal.dataset.canSubmitEmpty === "true";
+    const pw = String(input.value || "").trim();
+    if (!canSubmitEmpty && !pw) {
+      showToast("Enter room password.");
+      return;
+    }
+    finishRoomPasswordModal(pw);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      ok.click();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!modal || modal.hidden) return;
+    e.preventDefault();
+    finishRoomPasswordModal(null);
+  });
+})();
 
 function showToast(message) {
   const container = document.getElementById("toast-container");
@@ -81,7 +206,7 @@ function toAuthPrincipalPayload(identifier) {
 async function requestJson(url, options = {}) {
   let response;
   try {
-    response = await fetch(url, options);
+    response = await fetch(resolveUrl(url), options);
   } catch (error) {
     throw new Error("Server connection failed. Make sure backend is running.");
   }
@@ -294,9 +419,15 @@ function reopenLogin() {
   showOnlyForm("login");
 }
 
+function resetChatPanel() {
+  if (!chatMessages) return;
+  chatMessages.innerHTML = '<div class="chat-msg system"><span>Welcome to chat!</span></div>';
+}
+
 function cleanupRoomSession() {
   currentRoomId = null;
   resetRoomUi();
+  resetChatPanel();
   if (remoteVideo) remoteVideo.srcObject = null;
   if (peerConnection) {
     peerConnection.close();
@@ -595,18 +726,18 @@ socket.on("server:error", (payload) => {
   showToast(message);
 });
 
-socket.on("room-created", (roomId) => {
+socket.on("room-joined", async (roomId) => {
   currentRoomId = roomId;
   inputRoomId.value = roomId;
-  setRoomConnectedState("Host");
-  showToast(`Room created: ${roomId}`);
-});
-
-socket.on("room-joined", (roomId) => {
-  currentRoomId = roomId;
-  inputRoomId.value = roomId;
-  setRoomConnectedState("Connected");
-  showToast(`Joined room: ${roomId}`);
+  const wasHost = pendingRoomCreation;
+  if (pendingRoomCreation) {
+    setRoomConnectedState("Host");
+    pendingRoomCreation = false;
+  } else {
+    setRoomConnectedState("Connected");
+  }
+  showToast(wasHost ? `Room created: ${roomId}` : `Joined room: ${roomId}`);
+  await loadChatHistory(roomId);
 });
 
 socket.on("room-left", () => {
@@ -624,15 +755,38 @@ socket.on("user-left", () => {
 
 document.getElementById("btn-create").addEventListener("click", async () => {
   try {
+    if (!currentAccessToken) {
+      showToast("Please log in to create a room.");
+      return;
+    }
     await callFeatureEndpoint("/features/control-playback");
-    socket.emit("create-room");
+    const pw = await openRoomPasswordModal({
+      title: "Optional room password",
+      hint: "Leave empty if you do not want a password on this room.",
+      canSubmitEmpty: true
+    });
+    if (pw === null) return;
+    const body = {};
+    if (pw && String(pw).trim()) body.password = String(pw).trim();
+    pendingRoomCreation = true;
+    const data = await requestJson("/api/rooms", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentAccessToken}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!data.success) throw new Error(data.message || "Failed to create room");
+    socket.emit("join-room", { roomId: data.roomId });
   } catch (error) {
+    pendingRoomCreation = false;
     showToast(error.message);
   }
 });
 
 if (joinRoomButton) {
-  joinRoomButton.addEventListener("click", () => {
+  joinRoomButton.addEventListener("click", async () => {
     if (currentRoomId) {
       leaveCurrentRoom();
       return;
@@ -640,8 +794,59 @@ if (joinRoomButton) {
 
     const roomId = inputRoomId.value.trim();
     if (!roomId) return;
-    socket.emit("join-room", roomId);
+    if (!currentAccessToken) {
+      showToast("Please log in to join a room.");
+      return;
+    }
+
+    let password;
+    try {
+      const meta = await requestJson(
+        `/api/rooms/${encodeURIComponent(roomId)}/meta`,
+        {
+          headers: { Authorization: `Bearer ${currentAccessToken}` }
+        }
+      );
+      if (!meta.exists) {
+        showToast("Room not found.");
+        return;
+      }
+      if (meta.requiresPassword) {
+        const pw = await openRoomPasswordModal({
+          title: "Room password",
+          hint: "This room is password protected.",
+          canSubmitEmpty: false
+        });
+        if (pw === null) return;
+        password = pw;
+      }
+    } catch (error) {
+      showToast(error.message);
+      return;
+    }
+
+    socket.emit("join-room", { roomId, password });
   });
+}
+
+async function loadChatHistory(roomId) {
+  if (!currentAccessToken || !roomId) return;
+  try {
+    const data = await requestJson(
+      `/api/rooms/${encodeURIComponent(roomId)}/messages`,
+      {
+        headers: { Authorization: `Bearer ${currentAccessToken}` }
+      }
+    );
+    resetChatPanel();
+    for (const m of data.messages || []) {
+      const isLocal = currentUser && m.senderId === currentUser.id;
+      appendMessage(m.text, isLocal ? "local" : "remote", m.nickname || "");
+    }
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function appendMessage(text, type, senderName = "") {
@@ -682,7 +887,7 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
     height: "100%",
     width: "100%",
     videoId: "",
-    playerVars: { autoplay: 0, controls: 1, origin: "http://localhost:3000" },
+    playerVars: { autoplay: 0, controls: 1, origin: API_BASE },
     events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
   });
 };
