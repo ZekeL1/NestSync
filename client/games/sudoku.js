@@ -913,129 +913,127 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
     function renderShell() {
         gamesRoot.innerHTML = `
-          <div id="sudoku-shell" class="glass-panel" style="width:100%; height:100%; padding:18px; box-sizing:border-box;">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <div style="font-size:1.25rem; font-weight:800;">
-                  <i class="fa-solid fa-table-cells-large" style="color:#6c5ce7;"></i> Sudoku
+          <div id="sudoku-shell" class="glass-panel game-shell game-shell--sudoku">
+            <div class="game-header">
+              <div class="game-header-main">
+                <div class="game-title">
+                  <i class="fa-solid fa-table-cells-large"></i> Sudoku
                 </div>
                 <div id="sudoku-status" class="status-pill offline">Ready</div>
               </div>
 
-              <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
-                <button id="sudoku-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center; opacity:.7;">
+              <div class="game-header-actions">
+                <button id="sudoku-next" class="btn-primary game-action-primary" type="button" style="opacity:.7;">
                   <i class="fa-solid fa-forward"></i> Next Puzzle
                 </button>
-                <button id="sudoku-end" class="btn-icon" title="End Game">
+                <button id="sudoku-end" class="btn-icon" title="End Game" type="button">
                   <i class="fa-solid fa-flag-checkered"></i>
                 </button>
-                <button id="sudoku-back" class="btn-icon" title="Back to Arcade">
+                <button id="sudoku-back" class="btn-icon" title="Back to Arcade" type="button">
                   <i class="fa-solid fa-arrow-left"></i>
                 </button>
               </div>
             </div>
 
-            <div id="sudoku-waiting" class="glass-panel" style="height:calc(100% - 58px); display:flex; align-items:center; justify-content:center; text-align:center;">
-              <div style="width:min(560px, 92%);">
-                <div style="font-size:40px; margin-bottom:8px; color:#6c5ce7;"><i class="fa-solid fa-spinner fa-spin"></i></div>
-                <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting</div>
-                <div id="sudoku-wait-hint" style="opacity:.75; margin-bottom:14px;">Please join a room first.</div>
+            <div id="sudoku-waiting" class="glass-panel game-wait-screen">
+              <div class="game-wait-card">
+                <div class="game-wait-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+                <div class="game-wait-title">Waiting</div>
+                <div id="sudoku-wait-hint" class="game-wait-copy">Please join a room first.</div>
 
-                <div class="glass-panel" style="padding:14px; margin-bottom:14px; text-align:left;">
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Player</span>
+                <div class="glass-panel game-sidebar-panel game-wait-metrics">
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Player</span>
                     <strong id="sudoku-player-value">-</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Room</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Room</span>
                     <strong id="sudoku-room-value">-</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Difficulty</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Difficulty</span>
                     <strong data-sudoku-difficulty>Medium</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px;">
-                    <span style="opacity:.75;">Score</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Score</span>
                     <strong id="sudoku-score-value">0</strong>
                   </div>
-                  <div style="display:flex; justify-content:center; margin-top:12px;">
-                    <button id="sudoku-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;">
-                      <i class="fa-solid fa-play" style="font-size:1rem;"></i> Start
+                  <div class="game-wait-actions">
+                    <button id="sudoku-wait-start" class="btn-primary game-action-primary game-action-wide" type="button">
+                      <i class="fa-solid fa-play"></i> Start
                     </button>
                   </div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px; text-align:left;">
-                  <div style="font-weight:800; margin-bottom:10px;">Difficulty</div>
-                  <div id="sudoku-difficulty-buttons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+                <div class="glass-panel game-sidebar-panel game-panel-stack">
+                  <div class="game-panel-title">Difficulty</div>
+                  <div id="sudoku-difficulty-buttons" class="sudoku-difficulty-wrap"></div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px; margin-top:14px; text-align:left;">
-                  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
-                    <div style="font-weight:800;">Leaderboard</div>
-                    <button id="sudoku-refresh-scores" class="btn-icon" title="Reset Scores">
+                <div class="glass-panel game-sidebar-panel game-panel-stack">
+                  <div class="game-panel-header">
+                    <div class="game-panel-title">Leaderboard</div>
+                    <button id="sudoku-refresh-scores" class="btn-icon" title="Reset Scores" type="button">
                       <i class="fa-solid fa-rotate-right"></i>
                     </button>
                   </div>
-                  <div data-sudoku-scoreboard style="max-height:160px; overflow:auto;">-</div>
+                  <div data-sudoku-scoreboard class="game-scoreboard">-</div>
                 </div>
               </div>
             </div>
 
-            <div id="sudoku-live-area" style="display:none; gap:16px; height:calc(100% - 58px); min-height:0;">
-              <div style="flex:1; min-width:520px;">
-                <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
-                <div id="sudoku-board-panel" style="display:flex; flex-direction:column; gap:10px; flex:1; min-height:0;">
-                    <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                      <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
-                        <i class="fa-solid fa-table-cells"></i>
-                        <span>Puzzle Board</span>
-                      </div>
-                      <div id="sudoku-hint" class="status-pill online" style="font-size:.78rem;">Waiting</div>
+            <div id="sudoku-live-area" class="game-live-layout" style="display:none;">
+              <div class="game-stage-column">
+                <div id="sudoku-board-panel" class="game-stage-panel">
+                  <div class="glass-panel game-stage-toolbar">
+                    <div class="game-stage-label">
+                      <i class="fa-solid fa-table-cells"></i>
+                      <span>Puzzle Board</span>
                     </div>
+                    <div id="sudoku-hint" class="status-pill online sudoku-hint-pill">Waiting</div>
+                  </div>
 
-                    <div style="position:relative; width:100%; flex:1; min-height:0; padding:2px; box-sizing:border-box; border-radius:18px; overflow:hidden; background:#fff; border:1px solid rgba(108,92,231,.18); box-shadow:0 10px 24px rgba(108,92,231,.08);">
-                      <div id="sudoku-board-stage" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:16px; background:#fff;">
-                        <div id="sudoku-board" style="display:grid; grid-template-columns:repeat(9, 1fr); grid-template-rows:repeat(9, 1fr); overflow:hidden; background:transparent;"></div>
-                      </div>
+                  <div class="sudoku-stage-shell">
+                    <div id="sudoku-board-stage" class="sudoku-board-stage">
+                      <div id="sudoku-board" class="sudoku-board-grid"></div>
                     </div>
-                </div>
+                  </div>
                 </div>
               </div>
 
-              <div style="width:360px; display:flex; flex-direction:column; gap:12px;">
-                <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:8px;">Puzzle Stats</div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Timer</span>
+              <div class="game-side-column">
+                <div class="glass-panel game-sidebar-panel">
+                  <div class="game-panel-title">Puzzle Stats</div>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Timer</span>
                     <strong id="sudoku-timer">00:00</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Round</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Round</span>
                     <strong id="sudoku-round-value">-</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Difficulty</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Difficulty</span>
                     <strong data-sudoku-difficulty>Medium</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:8px;">
-                    <span style="opacity:.75;">Filled</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Filled</span>
                     <strong id="sudoku-filled-value">0 / 81</strong>
                   </div>
-                  <div style="display:flex; justify-content:space-between; gap:8px;">
-                    <span style="opacity:.75;">Mistakes</span>
+                  <div class="game-meta-row">
+                    <span class="game-meta-label">Mistakes</span>
                     <strong id="sudoku-mistakes-value">0</strong>
                   </div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:10px;">Keypad</div>
-                  <div id="sudoku-keypad" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;"></div>
+                <div class="glass-panel game-sidebar-panel">
+                  <div class="game-panel-title">Keypad</div>
+                  <div id="sudoku-keypad" class="sudoku-keypad-grid"></div>
                 </div>
 
-                <div class="glass-panel" style="padding:14px;">
-                  <div style="font-weight:800; margin-bottom:8px;">Leaderboard</div>
-                  <div data-sudoku-scoreboard style="max-height:140px; overflow:auto;">-</div>
+                <div class="glass-panel game-sidebar-panel">
+                  <div class="game-panel-title">Leaderboard</div>
+                  <div data-sudoku-scoreboard class="game-scoreboard">-</div>
                 </div>
 
               </div>
