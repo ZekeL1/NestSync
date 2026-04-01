@@ -40,6 +40,96 @@ const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
 
+let roomPasswordModalResolver = null;
+
+/**
+ * Replaces window.prompt (blocked in Electron with "prompt() is and will not be supported").
+ * @param {{ title?: string, hint?: string, placeholder?: string, canSubmitEmpty?: boolean }} options
+ * @returns {Promise<string | null>} trimmed password, or null if cancelled
+ */
+function openRoomPasswordModal(options = {}) {
+  const title = options.title || "Password";
+  const hint = options.hint || "";
+  const placeholder = options.placeholder || "";
+  const canSubmitEmpty = options.canSubmitEmpty !== false;
+
+  return new Promise((resolve) => {
+    const modal = document.getElementById("room-password-modal");
+    const titleEl = document.getElementById("room-password-modal-title");
+    const hintEl = document.getElementById("room-password-modal-hint");
+    const input = document.getElementById("room-password-modal-input");
+    if (!modal || !titleEl || !hintEl || !input) {
+      resolve(null);
+      return;
+    }
+
+    roomPasswordModalResolver = resolve;
+    titleEl.textContent = title;
+    if (hint) {
+      hintEl.textContent = hint;
+      hintEl.hidden = false;
+    } else {
+      hintEl.textContent = "";
+      hintEl.hidden = true;
+    }
+    input.placeholder = placeholder || (canSubmitEmpty ? "Optional — leave empty for none" : "Required");
+    input.value = "";
+    modal.dataset.canSubmitEmpty = canSubmitEmpty ? "true" : "false";
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden", "false");
+    setTimeout(() => input.focus(), 50);
+  });
+}
+
+function finishRoomPasswordModal(value) {
+  const modal = document.getElementById("room-password-modal");
+  if (modal) {
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden", "true");
+  }
+  const res = roomPasswordModalResolver;
+  roomPasswordModalResolver = null;
+  if (res) res(value);
+}
+
+(function setupRoomPasswordModal() {
+  const modal = document.getElementById("room-password-modal");
+  const input = document.getElementById("room-password-modal-input");
+  const ok = document.getElementById("room-password-modal-ok");
+  const cancel = document.getElementById("room-password-modal-cancel");
+  if (!modal || !input || !ok || !cancel) return;
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) finishRoomPasswordModal(null);
+  });
+
+  cancel.addEventListener("click", () => finishRoomPasswordModal(null));
+
+  ok.addEventListener("click", () => {
+    const canSubmitEmpty = modal.dataset.canSubmitEmpty === "true";
+    const pw = String(input.value || "").trim();
+    if (!canSubmitEmpty && !pw) {
+      showToast("Enter room password.");
+      return;
+    }
+    finishRoomPasswordModal(pw);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      ok.click();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (!modal || modal.hidden) return;
+    e.preventDefault();
+    finishRoomPasswordModal(null);
+  });
+})();
+
 function showToast(message) {
   const container = document.getElementById("toast-container");
   if (!container) return;
@@ -636,7 +726,11 @@ document.getElementById("btn-create").addEventListener("click", async () => {
       return;
     }
     await callFeatureEndpoint("/features/control-playback");
-    const pw = window.prompt("Optional room password (leave empty for none):", "");
+    const pw = await openRoomPasswordModal({
+      title: "Optional room password",
+      hint: "Leave empty if you do not want a password on this room.",
+      canSubmitEmpty: true
+    });
     if (pw === null) return;
     const body = {};
     if (pw && String(pw).trim()) body.password = String(pw).trim();
@@ -684,7 +778,11 @@ if (joinRoomButton) {
         return;
       }
       if (meta.requiresPassword) {
-        const pw = window.prompt("Enter room password:");
+        const pw = await openRoomPasswordModal({
+          title: "Room password",
+          hint: "This room is password protected.",
+          canSubmitEmpty: false
+        });
         if (pw === null) return;
         password = pw;
       }
