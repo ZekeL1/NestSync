@@ -40,6 +40,13 @@ const statusBadge = document.getElementById("status-badge");
 const inputRoomId = document.getElementById("input-room-id");
 const authOverlay = document.getElementById("auth-overlay");
 const joinRoomButton = document.getElementById("btn-join");
+const mobileNavToggle = document.getElementById("mobile-nav-toggle");
+const mobileNavToggleLabel = document.getElementById("mobile-nav-toggle-label");
+const mobilePanelToggle = document.getElementById("mobile-panel-toggle");
+const mobilePanelClose = document.getElementById("mobile-panel-close");
+const mobileSheetBackdrop = document.getElementById("mobile-sheet-backdrop");
+const mobileUserMenuToggle = document.getElementById("mobile-user-menu-toggle");
+const mobileUserMenu = document.getElementById("mobile-user-menu");
 
 const loginForm = document.getElementById("login-form");
 const registerForm = document.getElementById("register-form");
@@ -53,6 +60,7 @@ const backToLoginFromForgot = document.getElementById("back-to-login-from-forgot
 const backToLoginFromReset = document.getElementById("back-to-login-from-reset");
 const skipLoginButton = document.getElementById("skip-login");
 const guestLoginButton = document.getElementById("guest-login-button");
+const mobileGuestLoginButton = document.getElementById("mobile-guest-login-button");
 
 const chatInput = document.getElementById("chat-input");
 const chatMessages = document.getElementById("chat-messages");
@@ -73,6 +81,144 @@ let pendingRoomCreation = false;
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
+const compactViewportMedia = window.matchMedia("(max-width: 1199px)");
+const mobileViewportMedia = window.matchMedia("(max-width: 767px)");
+const mobilePanelToggleStorageKey = "nestsync-mobile-panel-toggle-position";
+
+function isCompactViewport() {
+  return compactViewportMedia.matches;
+}
+
+function isMobileViewport() {
+  return mobileViewportMedia.matches;
+}
+
+function setMobilePanelOpen(open) {
+  const nextOpen = !!open && isCompactViewport();
+  document.body.classList.toggle("is-mobile-sheet-open", nextOpen);
+
+  if (mobileSheetBackdrop) {
+    mobileSheetBackdrop.hidden = !nextOpen;
+  }
+
+  if (mobilePanelToggle) {
+    mobilePanelToggle.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+    mobilePanelToggle.title = nextOpen ? "Close Family Link" : "Open Family Link";
+  }
+}
+
+function toggleMobilePanel() {
+  setMobileUserMenuOpen(false);
+  setMobilePanelOpen(!document.body.classList.contains("is-mobile-sheet-open"));
+}
+
+function clampFloatingPanelTogglePosition(position) {
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const buttonWidth = 56;
+  const buttonHeight = 56;
+  const margin = 12;
+  const bottomDockOffset = 108;
+
+  const defaultX = Math.max(margin, viewportWidth - buttonWidth - 16);
+  const defaultY = Math.max(
+    72,
+    Math.min(viewportHeight - buttonHeight - bottomDockOffset, viewportHeight - buttonHeight - 124)
+  );
+
+  const rawX = position && Number.isFinite(position.x) ? position.x : defaultX;
+  const rawY = position && Number.isFinite(position.y) ? position.y : defaultY;
+
+  return {
+    x: Math.min(Math.max(margin, rawX), Math.max(margin, viewportWidth - buttonWidth - margin)),
+    y: Math.min(Math.max(72, rawY), Math.max(72, viewportHeight - buttonHeight - 88))
+  };
+}
+
+function saveFloatingPanelTogglePosition(position) {
+  try {
+    window.localStorage.setItem(mobilePanelToggleStorageKey, JSON.stringify(position));
+  } catch (error) {
+    // Ignore storage failures.
+  }
+}
+
+function readFloatingPanelTogglePosition() {
+  try {
+    const raw = window.localStorage.getItem(mobilePanelToggleStorageKey);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function applyFloatingPanelTogglePosition(position) {
+  if (!mobilePanelToggle) return;
+  const nextPosition = clampFloatingPanelTogglePosition(position);
+  mobilePanelToggle.style.left = `${nextPosition.x}px`;
+  mobilePanelToggle.style.top = `${nextPosition.y}px`;
+}
+
+function setMobileNavExpanded(expanded) {
+  const nextExpanded = !!expanded && isMobileViewport();
+  document.body.classList.toggle("is-mobile-nav-expanded", nextExpanded);
+
+  if (mobileNavToggle) {
+    const icon = mobileNavToggle.querySelector("i");
+    if (icon) {
+      icon.className = nextExpanded ? "fa-solid fa-chevron-down" : "fa-solid fa-chevron-up";
+    }
+    mobileNavToggle.title = nextExpanded ? "Collapse menu" : "Expand menu";
+    mobileNavToggle.setAttribute("aria-expanded", nextExpanded ? "true" : "false");
+  }
+}
+
+function setMobileNavLabel(tabId) {
+  if (!mobileNavToggleLabel) return;
+
+  const labelMap = {
+    cinema: "Cinema",
+    games: "Arcade",
+    tales: "Tales"
+  };
+
+  mobileNavToggleLabel.textContent = labelMap[tabId] || "Menu";
+}
+
+function setMobileUserMenuOpen(open) {
+  const nextOpen = !!open && isMobileViewport();
+  document.body.classList.toggle("is-mobile-user-menu-open", nextOpen);
+
+  if (mobileUserMenu) {
+    mobileUserMenu.style.display = nextOpen ? "flex" : "none";
+  }
+
+  if (mobileUserMenuToggle) {
+    mobileUserMenuToggle.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+    mobileUserMenuToggle.title = nextOpen ? "Close account menu" : "Open account menu";
+  }
+}
+
+function syncResponsiveShell() {
+  if (!isCompactViewport()) {
+    setMobilePanelOpen(false);
+    if (mobileSheetBackdrop) {
+      mobileSheetBackdrop.hidden = true;
+    }
+  }
+
+  if (!isMobileViewport()) {
+    setMobileNavExpanded(false);
+    setMobileUserMenuOpen(false);
+  } else {
+    setMobileNavExpanded(false);
+    setMobileUserMenuOpen(false);
+  }
+
+  if (isCompactViewport()) {
+    applyFloatingPanelTogglePosition(readFloatingPanelTogglePosition());
+  }
+}
 
 let roomPasswordModalResolver = null;
 
@@ -239,6 +385,15 @@ function activateTab(targetTabId) {
 
   const targetContent = document.getElementById(targetTabId);
   if (targetContent) targetContent.classList.add("active-content");
+  setMobileNavLabel(targetTabId);
+
+  if (isCompactViewport()) {
+    setMobilePanelOpen(false);
+  }
+  if (isMobileViewport()) {
+    setMobileNavExpanded(false);
+    setMobileUserMenuOpen(false);
+  }
 }
 
 function updateJoinButtonMode(inRoom) {
@@ -344,9 +499,30 @@ function applyRoleVisibility(role) {
   document.getElementById("btn-create").style.display = isParent ? "flex" : "none";
   document.getElementById("url-control-panel").style.display = isParent ? "flex" : "none";
   document.getElementById("cam-controls").style.display = isParent ? "flex" : "none";
-  if (guestLoginButton) {
-    guestLoginButton.style.display = role === "guest" ? "inline-flex" : "none";
-  }
+  [guestLoginButton, mobileGuestLoginButton].forEach((button) => {
+    if (!button) return;
+    button.style.display = "inline-flex";
+    button.textContent = role === "guest" ? "Log In" : "Log Out";
+    button.title = role === "guest" ? "Log In" : "Log Out";
+  });
+}
+
+function setCurrentUserUi({ name, role, avatar }) {
+  const fields = [
+    ["current-user-name", name],
+    ["current-user-role", role],
+    ["current-user-avatar", avatar],
+    ["mobile-user-menu-avatar", avatar],
+    ["mobile-current-user-name", name],
+    ["mobile-current-user-role", role],
+    ["mobile-current-user-avatar", avatar]
+  ];
+
+  fields.forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    element.innerText = value;
+  });
 }
 
 async function loadProfileFromMe() {
@@ -374,11 +550,11 @@ function handleLoginSuccess(user, accessToken) {
   currentAccessToken = accessToken || null;
 
   authOverlay.style.display = "none";
-  document.getElementById("current-user-name").innerText = user.nickname || user.username || "User";
-  document.getElementById("current-user-role").innerText = (user.role || "unknown").toUpperCase();
-  document.getElementById("current-user-avatar").innerText = (user.nickname || user.username || "U")
-    .charAt(0)
-    .toUpperCase();
+  setCurrentUserUi({
+    name: user.nickname || user.username || "User",
+    role: (user.role || "unknown").toUpperCase(),
+    avatar: (user.nickname || user.username || "U").charAt(0).toUpperCase()
+  });
 
   applyRoleVisibility(user.role);
   activateTab("cinema");
@@ -404,9 +580,11 @@ function enterGuestMode() {
   currentAccessToken = null;
 
   authOverlay.style.display = "none";
-  document.getElementById("current-user-name").innerText = "Guest";
-  document.getElementById("current-user-role").innerText = "GUEST";
-  document.getElementById("current-user-avatar").innerText = "G";
+  setCurrentUserUi({
+    name: "Guest",
+    role: "GUEST",
+    avatar: "G"
+  });
 
   applyRoleVisibility("guest");
   activateTab("cinema");
@@ -415,6 +593,9 @@ function enterGuestMode() {
 }
 
 function reopenLogin() {
+  setMobilePanelOpen(false);
+  setMobileNavExpanded(false);
+  setMobileUserMenuOpen(false);
   authOverlay.style.display = "flex";
   showOnlyForm("login");
 }
@@ -422,6 +603,34 @@ function reopenLogin() {
 function resetChatPanel() {
   if (!chatMessages) return;
   chatMessages.innerHTML = '<div class="chat-msg system"><span>Welcome to chat!</span></div>';
+}
+
+function logoutCurrentUser() {
+  const label = currentUser ? (currentUser.nickname || currentUser.username || "User") : "User";
+
+  setMobilePanelOpen(false);
+  setMobileNavExpanded(false);
+  setMobileUserMenuOpen(false);
+  cleanupRoomSession();
+
+  if (socket.connected) {
+    isIntentionalReconnect = true;
+    socket.disconnect();
+  }
+
+  socket.auth = {};
+  currentUser = null;
+  currentAccessToken = null;
+
+  setCurrentUserUi({
+    name: "Guest",
+    role: "GUEST",
+    avatar: "G"
+  });
+  applyRoleVisibility("guest");
+  setLobbyStatus();
+  reopenLogin();
+  showToast(`${label} signed out.`);
 }
 
 function cleanupRoomSession() {
@@ -451,6 +660,127 @@ function leaveCurrentRoom() {
   }
 
   showToast("Left the room.");
+}
+
+if (mobilePanelToggle) {
+  let panelTogglePointerId = null;
+  let panelToggleMoved = false;
+  let panelToggleStartPoint = null;
+  let panelToggleStartPosition = null;
+  let suppressPanelToggleClick = false;
+
+  mobilePanelToggle.addEventListener("pointerdown", (event) => {
+    if (!isCompactViewport()) return;
+    panelTogglePointerId = event.pointerId;
+    panelToggleMoved = false;
+    panelToggleStartPoint = { x: event.clientX, y: event.clientY };
+    panelToggleStartPosition = clampFloatingPanelTogglePosition({
+      x: parseFloat(mobilePanelToggle.style.left),
+      y: parseFloat(mobilePanelToggle.style.top)
+    });
+    mobilePanelToggle.setPointerCapture(event.pointerId);
+  });
+
+  mobilePanelToggle.addEventListener("pointermove", (event) => {
+    if (panelTogglePointerId !== event.pointerId || !panelToggleStartPoint || !panelToggleStartPosition) return;
+
+    const deltaX = event.clientX - panelToggleStartPoint.x;
+    const deltaY = event.clientY - panelToggleStartPoint.y;
+
+    if (!panelToggleMoved && Math.hypot(deltaX, deltaY) > 6) {
+      panelToggleMoved = true;
+    }
+
+    if (!panelToggleMoved) return;
+
+    const nextPosition = clampFloatingPanelTogglePosition({
+      x: panelToggleStartPosition.x + deltaX,
+      y: panelToggleStartPosition.y + deltaY
+    });
+    applyFloatingPanelTogglePosition(nextPosition);
+  });
+
+  const finishPanelTogglePointer = (event) => {
+    if (panelTogglePointerId !== event.pointerId) return;
+
+    if (mobilePanelToggle.hasPointerCapture(event.pointerId)) {
+      mobilePanelToggle.releasePointerCapture(event.pointerId);
+    }
+
+    if (panelToggleMoved) {
+      const nextPosition = clampFloatingPanelTogglePosition({
+        x: parseFloat(mobilePanelToggle.style.left),
+        y: parseFloat(mobilePanelToggle.style.top)
+      });
+      applyFloatingPanelTogglePosition(nextPosition);
+      saveFloatingPanelTogglePosition(nextPosition);
+      suppressPanelToggleClick = true;
+      window.setTimeout(() => {
+        suppressPanelToggleClick = false;
+      }, 220);
+    }
+
+    panelTogglePointerId = null;
+    panelToggleMoved = false;
+    panelToggleStartPoint = null;
+    panelToggleStartPosition = null;
+  };
+
+  mobilePanelToggle.addEventListener("pointerup", finishPanelTogglePointer);
+  mobilePanelToggle.addEventListener("pointercancel", finishPanelTogglePointer);
+  mobilePanelToggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (suppressPanelToggleClick) return;
+    toggleMobilePanel();
+  });
+  mobilePanelToggle.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleMobilePanel();
+    }
+  });
+}
+
+if (mobileNavToggle) {
+  mobileNavToggle.addEventListener("click", () => {
+    setMobileUserMenuOpen(false);
+    setMobileNavExpanded(!document.body.classList.contains("is-mobile-nav-expanded"));
+  });
+}
+
+if (mobileUserMenuToggle) {
+  const toggleMobileUserMenu = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setMobileUserMenuOpen(!document.body.classList.contains("is-mobile-user-menu-open"));
+  };
+
+  mobileUserMenuToggle.addEventListener("click", toggleMobileUserMenu);
+}
+
+if (mobilePanelClose) {
+  mobilePanelClose.addEventListener("click", () => {
+    setMobilePanelOpen(false);
+  });
+}
+
+if (mobileSheetBackdrop) {
+  mobileSheetBackdrop.addEventListener("click", () => {
+    setMobilePanelOpen(false);
+  });
+}
+
+if (typeof compactViewportMedia.addEventListener === "function") {
+  compactViewportMedia.addEventListener("change", syncResponsiveShell);
+} else if (typeof compactViewportMedia.addListener === "function") {
+  compactViewportMedia.addListener(syncResponsiveShell);
+}
+
+if (typeof mobileViewportMedia.addEventListener === "function") {
+  mobileViewportMedia.addEventListener("change", syncResponsiveShell);
+} else if (typeof mobileViewportMedia.addListener === "function") {
+  mobileViewportMedia.addListener(syncResponsiveShell);
 }
 
 showRegisterLink.addEventListener("click", (event) => {
@@ -484,11 +814,35 @@ if (skipLoginButton) {
   });
 }
 
-if (guestLoginButton) {
-  guestLoginButton.addEventListener("click", () => {
-    reopenLogin();
-  });
+function handleAuthActionClick() {
+  if (currentAccessToken && currentUser && currentUser.role !== "guest") {
+    logoutCurrentUser();
+    return;
+  }
+  reopenLogin();
 }
+
+[guestLoginButton, mobileGuestLoginButton].forEach((button) => {
+  if (!button) return;
+  button.addEventListener("click", () => {
+    setMobileUserMenuOpen(false);
+    handleAuthActionClick();
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (!isMobileViewport() || !document.body.classList.contains("is-mobile-user-menu-open")) return;
+  const target = event.target;
+  if (
+    mobileUserMenuToggle && mobileUserMenuToggle.contains(target)
+  ) {
+    return;
+  }
+  if (mobileUserMenu && mobileUserMenu.contains(target)) {
+    return;
+  }
+  setMobileUserMenuOpen(false);
+});
 
 const btnResendCode = document.getElementById("btn-resend-code");
 if (btnResendCode) {
@@ -1039,6 +1393,8 @@ socket.on("webrtc-ice-candidate", async (candidate) => {
 
 showOnlyForm("login");
 activateTab("cinema");
+syncResponsiveShell();
+setMobileUserMenuOpen(false);
 startCamera();
 
 const TALES = {

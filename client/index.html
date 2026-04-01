@@ -31,19 +31,19 @@
 
     <div id="auth-overlay" class="auth-overlay">
         <div class="auth-box">
-            <div style="font-size: 3.5rem; color: #6c5ce7; margin-bottom: 20px;"><i class="fa-solid fa-house-chimney-user"></i></div>
-            <h2 id="auth-title" style="margin-bottom: 8px; font-weight:800;">Welcome Home</h2>
-            <p id="auth-subtitle" style="color:#636e72; margin-bottom: 30px; font-weight:500;">Connect with your family.</p>
+            <div class="auth-hero-icon"><i class="fa-solid fa-house-chimney-user"></i></div>
+            <h2 id="auth-title" class="auth-title">Welcome Home</h2>
+            <p id="auth-subtitle" class="auth-subtitle">Connect with your family.</p>
 
             <form id="login-form">
                 <input type="text" id="login-username" class="auth-input" placeholder="Username or Email" required>
                 <input type="password" id="login-password" class="auth-input" placeholder="Password" required>
                 <button type="submit" class="btn-full">Log In</button>
                 <button type="button" id="skip-login" class="btn-full btn-ghost">Skip for now</button>
-                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                <div class="auth-link-row">
                     No account? <a href="#" id="show-register" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Sign Up</a>
                 </div>
-                <div style="margin-top:8px; font-size:0.9rem; color:#636e72;">
+                <div class="auth-link-row auth-link-row-compact">
                     Forgot password? <a href="#" id="show-forgot" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Reset here</a>
                 </div>
                 <div id="login-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
@@ -54,21 +54,21 @@
                 <input type="email" id="reg-email" class="auth-input" placeholder="Email" required>
                 <input type="text" id="reg-nickname" class="auth-input" placeholder="Nickname (e.g. Dad)" required>
                 <input type="password" id="reg-password" class="auth-input" placeholder="Password" required>
-                <div style="margin:-4px 0 12px; font-size:0.82rem; color:#636e72; text-align:left;">
+                <div class="auth-helper-text">
                     Password rule: at least 6 characters with at least one letter and one number. Uppercase and symbols are optional.
                 </div>
                 
-                <div style="display:flex; gap:12px; margin-bottom:20px;">
-                    <label style="flex:1; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                <div class="auth-role-row">
+                    <label class="auth-role-card">
                         <input type="radio" name="role" value="parent" checked> <strong>Parent</strong>
                     </label>
-                    <label style="flex:1; cursor:pointer; background:rgba(0,0,0,0.05); padding:10px; border-radius:12px; text-align:center;">
+                    <label class="auth-role-card">
                         <input type="radio" name="role" value="child"> <strong>Child</strong>
                     </label>
                 </div>
 
                 <button type="submit" class="btn-full">Create Account</button>
-                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                <div class="auth-link-row">
                     Has account? <a href="#" id="show-login" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
                 </div>
                 <div id="reg-error" style="color:#ff7675; margin-top:10px; font-weight:600;"></div>
@@ -77,171 +77,209 @@
             <form id="forgot-form" style="display:none;">
                 <input type="text" id="forgot-identifier" class="auth-input" placeholder="Username or Email" required>
                 <button type="submit" class="btn-full">Send Reset Code</button>
-                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                <div class="auth-link-row">
                     Back to <a href="#" id="back-to-login-from-forgot" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
                 </div>
             </form>
 
             <form id="reset-form" style="display:none;">
                 <input type="text" id="reset-identifier" class="auth-input" placeholder="Username or Email" required>
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div class="auth-reset-row">
                     <input type="text" id="reset-code" class="auth-input" placeholder="Verification Code" required style="flex:1;">
                     <button type="button" id="btn-resend-code" class="resend-btn">Resend</button>
                 </div>
                 <input type="password" id="reset-new-password" class="auth-input" placeholder="New Password" required>
-                <div style="margin:-4px 0 12px; font-size:0.82rem; color:#636e72; text-align:left;">
+                <div class="auth-helper-text">
                     New password: at least 6 characters with at least one letter and one number.
                 </div>
                 <button type="submit" class="btn-full">Reset Password</button>
-                <div style="margin-top:20px; font-size:0.9rem; color:#636e72;">
+                <div class="auth-link-row">
                     Back to <a href="#" id="back-to-login-from-reset" style="color:#6c5ce7; font-weight:700; text-decoration:none;">Log In</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <nav class="sidebar glass-panel">
-        <div class="titlebar-safe-area"></div>
-        <div class="logo"><i class="fa-solid fa-bolt"></i> NestSync</div>
-        <ul class="nav-links">
-            <li class="active" data-tab="cinema"><i class="fa-solid fa-film"></i> Cinema</li>
-            <li data-tab="games"><i class="fa-solid fa-gamepad"></i> Arcade</li>
-            <li data-tab="tales"><i class="fa-solid fa-book-open"></i> Tales</li>
-        </ul>
-        <div class="user-card">
-            <div class="avatar" id="current-user-avatar"><i class="fa-solid fa-user"></i></div>
-            <div class="user-info">
-                <span class="u-name" id="current-user-name">Guest</span>
-                <span class="u-role" id="current-user-role"></span>
-            </div>
-            <button type="button" id="guest-login-button" class="guest-login-btn" style="display:none;">Log In</button>
-        </div>
-    </nav>
-
-    <div class="main-wrapper">
-        <header class="topbar glass-panel">
-            <div class="status-pill offline" id="status-badge">Offline</div>
-            
-            <div class="room-controls">
-                <input type="text" id="input-room-id" class="input-room" placeholder="Room ID" maxlength="4">
-                <button id="btn-join" class="btn-icon" title="Join"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
-                <button id="btn-create" class="btn-primary"><i class="fa-solid fa-plus"></i> New Room</button>
-            </div>
-        </header>
-
-        <main class="content-area glass-panel">
-            <div id="cinema" class="tab-content active-content">
-                <div class="cinema-container">
-                    <div id="youtube-player"></div>
-                    <div id="video-empty-state" class="empty-state">
-                        <i class="fa-brands fa-youtube"></i>
-                        <p>Waiting for video...</p>
-                    </div>
+    <div class="app-shell">
+        <nav class="sidebar glass-panel mobile-bottom-nav">
+            <div class="titlebar-safe-area"></div>
+            <div class="logo"><i class="fa-solid fa-bolt"></i> NestSync</div>
+            <button id="mobile-nav-toggle" class="btn-icon mobile-nav-toggle" type="button" title="Expand menu">
+                <span class="mobile-toggle-copy">
+                    <strong id="mobile-nav-toggle-label">Menu</strong>
+                    <small>Tap to open</small>
+                </span>
+                <i class="fa-solid fa-chevron-up"></i>
+            </button>
+            <ul class="nav-links">
+                <li class="active" data-tab="cinema"><i class="fa-solid fa-film"></i> <span>Cinema</span></li>
+                <li data-tab="games"><i class="fa-solid fa-gamepad"></i> <span>Arcade</span></li>
+                <li data-tab="tales"><i class="fa-solid fa-book-open"></i> <span>Tales</span></li>
+            </ul>
+            <div class="user-card">
+                <div class="avatar" id="current-user-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="user-info">
+                    <span class="u-name" id="current-user-name">Guest</span>
+                    <span class="u-role" id="current-user-role"></span>
                 </div>
-
-                <div class="url-input-wrapper" id="url-control-panel">
-                    <input type="text" id="input-video-url" placeholder="Paste YouTube link here...">
-                    <button id="btn-load-video" class="btn-circle"><i class="fa-solid fa-arrow-right"></i></button>
-                </div>
+                <button type="button" id="guest-login-button" class="guest-login-btn" style="display:none;">Log In</button>
             </div>
-            
-            <div id="games" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Games Area</h1></div></div>
-            <div id="tales" class="tab-content tales-tab">
-                <div class="tales-switcher" id="tales-switcher">
-                    <button type="button" class="tales-switch-btn is-active" data-tales-pane="library">
-                        <i class="fa-solid fa-book-open"></i> Choose a Story
-                    </button>
-                    <button type="button" class="tales-switch-btn" data-tales-pane="ai">
-                        <i class="fa-solid fa-book-open-reader"></i> Smart Fairytale Teller
-                    </button>
-                </div>
-                <section class="tales-pane is-active" id="tales-pane-library">
-                    <div class="tales-grid" id="tales-grid">
-                        <div class="story-card" data-story="cinderella" tabindex="0">
-                            <div class="story-cover story-cover-cinderella"></div>
-                            <span class="story-name">Cinderella</span>
+        </nav>
+
+        <div class="main-wrapper">
+            <header class="topbar glass-panel">
+                <div class="topbar-main">
+                    <div class="topbar-primary-row">
+                        <div class="status-pill offline" id="status-badge">Offline</div>
+                        <div class="room-controls">
+                            <input type="text" id="input-room-id" class="input-room" placeholder="Room ID" maxlength="4">
+                            <button id="btn-join" class="btn-icon" title="Join"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                            <button id="btn-create" class="btn-icon" title="New Room"><i class="fa-solid fa-plus"></i></button>
                         </div>
-                        <div class="story-card" data-story="peterpan" tabindex="0">
-                            <div class="story-cover story-cover-peterpan"></div>
-                            <span class="story-name">Peter Pan</span>
-                        </div>
-                        <div class="story-card" data-story="littlered" tabindex="0">
-                            <div class="story-cover story-cover-littlered"></div>
-                            <span class="story-name">Little Red Riding Hood</span>
-                        </div>
-                    </div>
-                </section>
-                <section class="tales-pane" id="tales-pane-ai" hidden>
-                    <section class="ai-tales-panel" id="ai-tales-panel">
-                        <form id="ai-tales-form" class="ai-tales-form">
-                            <textarea
-                                id="ai-tales-prompt"
-                                class="ai-tales-input"
-                                rows="5"
-                                maxlength="800"
-                                placeholder="Describe your custom crossover fairy tale idea.&#10;For example: Tell me a story about Judy and Cinderella."
-                                required
-                            ></textarea>
-                            <div class="ai-tales-actions">
-                                <button type="submit" id="ai-tales-generate" class="ai-tales-generate-btn">
-                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Story
-                                </button>
-                                <span class="ai-tales-badge" id="ai-tales-model-badge">Local LLM: phi3:mini</span>
+                        <div class="mobile-top-user-menu">
+                            <button id="mobile-user-menu-toggle" class="btn-icon mobile-user-menu-toggle" type="button" title="Open account menu">
+                                <span class="avatar mobile-user-menu-avatar" id="mobile-user-menu-avatar"><i class="fa-solid fa-user"></i></span>
+                            </button>
+                            <div id="mobile-user-menu" class="mobile-user-menu-panel">
+                                <div class="mobile-user-menu-summary">
+                                    <div class="avatar mobile-user-menu-summary-avatar" id="mobile-current-user-avatar"><i class="fa-solid fa-user"></i></div>
+                                    <div class="user-info">
+                                        <span class="u-name" id="mobile-current-user-name">Guest</span>
+                                        <span class="u-role" id="mobile-current-user-role"></span>
+                                    </div>
+                                </div>
+                                <button type="button" id="mobile-guest-login-button" class="guest-login-btn mobile-user-menu-action" style="display:none;">Log In</button>
                             </div>
-                        </form>
-                        <article class="ai-tales-output" id="ai-tales-output">
-                            <p class="ai-tales-placeholder">Your own lovely story is coming here!</p>
-                        </article>
-                    </section>
-                </section>
-                <div class="tales-reader" id="tales-reader" hidden>
-                    <button class="tales-reader-close" id="tales-reader-close" title="Back to list"><i class="fa-solid fa-arrow-left"></i></button>
-                    <div class="tales-reader-inner">
-                        <div class="tales-page-illustration" id="tales-page-illustration"></div>
-                        <div class="tales-page-text-wrap">
-                            <h3 class="tales-reader-story-title" id="tales-reader-story-title"></h3>
-                            <p class="tales-page-text" id="tales-page-text"></p>
                         </div>
                     </div>
-                    <div class="tales-nav">
-                        <button class="tales-btn tales-btn-prev" id="tales-btn-prev" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
-                        <span class="tales-page-indicator" id="tales-page-indicator">1 / 1</span>
-                        <button class="tales-btn tales-btn-read" id="tales-btn-read" title="Read this page aloud"><i class="fa-solid fa-volume-high"></i> Read Aloud</button>
-                        <button class="tales-btn tales-btn-next" id="tales-btn-next"><i class="fa-solid fa-chevron-right"></i> Next</button>
+                </div>
+            </header>
+
+            <main class="content-area glass-panel">
+                <div id="cinema" class="tab-content active-content">
+                    <div class="cinema-container">
+                        <div id="youtube-player"></div>
+                        <div id="video-empty-state" class="empty-state">
+                            <i class="fa-brands fa-youtube"></i>
+                            <p>Waiting for video...</p>
+                        </div>
+                    </div>
+
+                    <div class="url-input-wrapper" id="url-control-panel">
+                        <input type="text" id="input-video-url" placeholder="Paste YouTube link here...">
+                        <button id="btn-load-video" class="btn-circle"><i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div id="games" class="tab-content"><div style="padding:40px; text-align:center; color:#888;"><h1>Games Area</h1></div></div>
+                <div id="tales" class="tab-content tales-tab">
+                    <div class="tales-switcher" id="tales-switcher">
+                        <button type="button" class="tales-switch-btn is-active" data-tales-pane="library">
+                            <i class="fa-solid fa-book-open"></i> Choose a Story
+                        </button>
+                        <button type="button" class="tales-switch-btn" data-tales-pane="ai">
+                            <i class="fa-solid fa-book-open-reader"></i> Smart Fairytale Teller
+                        </button>
+                    </div>
+                    <section class="tales-pane is-active" id="tales-pane-library">
+                        <div class="tales-grid" id="tales-grid">
+                            <div class="story-card" data-story="cinderella" tabindex="0">
+                                <div class="story-cover story-cover-cinderella"></div>
+                                <span class="story-name">Cinderella</span>
+                            </div>
+                            <div class="story-card" data-story="peterpan" tabindex="0">
+                                <div class="story-cover story-cover-peterpan"></div>
+                                <span class="story-name">Peter Pan</span>
+                            </div>
+                            <div class="story-card" data-story="littlered" tabindex="0">
+                                <div class="story-cover story-cover-littlered"></div>
+                                <span class="story-name">Little Red Riding Hood</span>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="tales-pane" id="tales-pane-ai" hidden>
+                        <section class="ai-tales-panel" id="ai-tales-panel">
+                            <form id="ai-tales-form" class="ai-tales-form">
+                                <textarea
+                                    id="ai-tales-prompt"
+                                    class="ai-tales-input"
+                                    rows="5"
+                                    maxlength="800"
+                                    placeholder="Describe your custom crossover fairy tale idea.&#10;For example: Tell me a story about Judy and Cinderella."
+                                    required
+                                ></textarea>
+                                <div class="ai-tales-actions">
+                                    <button type="submit" id="ai-tales-generate" class="ai-tales-generate-btn">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Story
+                                    </button>
+                                    <span class="ai-tales-badge" id="ai-tales-model-badge">Local LLM: phi3:mini</span>
+                                </div>
+                            </form>
+                            <article class="ai-tales-output" id="ai-tales-output">
+                                <p class="ai-tales-placeholder">Your own lovely story is coming here!</p>
+                            </article>
+                        </section>
+                    </section>
+                    <div class="tales-reader" id="tales-reader" hidden>
+                        <button class="tales-reader-close" id="tales-reader-close" title="Back to list"><i class="fa-solid fa-arrow-left"></i></button>
+                        <div class="tales-reader-inner">
+                            <div class="tales-page-illustration" id="tales-page-illustration"></div>
+                            <div class="tales-page-text-wrap">
+                                <h3 class="tales-reader-story-title" id="tales-reader-story-title"></h3>
+                                <p class="tales-page-text" id="tales-page-text"></p>
+                            </div>
+                        </div>
+                        <div class="tales-nav">
+                            <button class="tales-btn tales-btn-prev" id="tales-btn-prev" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                            <span class="tales-page-indicator" id="tales-page-indicator">1 / 1</span>
+                            <button class="tales-btn tales-btn-read" id="tales-btn-read" title="Read this page aloud"><i class="fa-solid fa-volume-high"></i> Read Aloud</button>
+                            <button class="tales-btn tales-btn-next" id="tales-btn-next"><i class="fa-solid fa-chevron-right"></i> Next</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <button id="mobile-panel-toggle" class="floating-family-link-btn" type="button" title="Open Family Link" aria-label="Open Family Link">
+            <i class="fa-solid fa-comments"></i>
+        </button>
+
+        <div id="mobile-sheet-backdrop" class="mobile-sheet-backdrop" hidden></div>
+
+        <aside class="camera-panel glass-panel mobile-sheet" id="family-link-panel">
+            <div class="camera-panel-header">
+                <div class="panel-header">Family Link</div>
+                <button id="mobile-panel-close" class="btn-icon mobile-panel-close" type="button" title="Close Family Link">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="cam-wrapper">
+                <div class="cam-card remote-cam">
+                    <video id="remote-video" autoplay playsinline></video>
+                    <div class="cam-tag">REMOTE</div>
+                </div>
+                <div class="cam-card local-cam">
+                    <video id="local-video" autoplay playsinline muted></video>
+                    <div class="cam-tag">YOU</div>
+                    <div class="local-controls" id="cam-controls">
+                        <button id="btn-toggle-mic" class="icon-btn-sm"><i class="fa-solid fa-microphone"></i></button>
+                        <button id="btn-toggle-cam" class="icon-btn-sm"><i class="fa-solid fa-video"></i></button>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <aside class="camera-panel glass-panel">
-        <div class="panel-header">Family Link</div>
-        
-        <div class="cam-wrapper">
-            <div class="cam-card remote-cam">
-                <video id="remote-video" autoplay playsinline></video>
-                <div class="cam-tag">REMOTE</div>
-            </div>
-            <div class="cam-card local-cam">
-                <video id="local-video" autoplay playsinline muted></video>
-                <div class="cam-tag">YOU</div>
-                <div class="local-controls" id="cam-controls">
-                    <button id="btn-toggle-mic" class="icon-btn-sm"><i class="fa-solid fa-microphone"></i></button>
-                    <button id="btn-toggle-cam" class="icon-btn-sm"><i class="fa-solid fa-video"></i></button>
+            <div class="chat-wrapper">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="chat-msg system"><span>Welcome to chat!</span></div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Say something...">
+                    <button id="btn-send-chat"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
-        </div>
-
-        <div class="chat-wrapper">
-            <div class="chat-messages" id="chat-messages">
-                <div class="chat-msg system"><span>Welcome to chat!</span></div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chat-input" placeholder="Say something...">
-                <button id="btn-send-chat"><i class="fa-solid fa-paper-plane"></i></button>
-            </div>
-        </div>
-    </aside>
+        </aside>
+    </div>
     
     <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
     <script src="games/pictionary.js"></script>

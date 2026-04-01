@@ -11,8 +11,8 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1300, 
         height: 900, 
-        minWidth: 1100, 
-        minHeight: 750,
+        minWidth: 375, 
+        minHeight: 667,
         title: "NestSync",
         titleBarStyle: 'hiddenInset', 
         trafficLightPosition: { x: 20, y: 20 }, 
