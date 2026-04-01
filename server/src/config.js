@@ -19,7 +19,11 @@ const config = {
   cognitoIssuer: process.env.COGNITO_ISSUER || "",
   dynamoRoomsTable: process.env.DYNAMODB_ROOMS_TABLE || "",
   dynamoMessagesTable: process.env.DYNAMODB_MESSAGES_TABLE || "",
-  roomStoreBackend: process.env.ROOM_STORE || "auto"
+  roomStoreBackend: process.env.ROOM_STORE || "auto",
+  corsOrigins: (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
 };
 
 module.exports = {
