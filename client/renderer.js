@@ -1,4 +1,38 @@
-const socket = io("http://localhost:3000", { autoConnect: false });
+function normalizeBaseUrl(raw) {
+  if (!raw) return "";
+  return String(raw).trim().replace(/\/+$/, "");
+}
+
+function inferDefaultApiBase() {
+  if (window.location && /^https?:/.test(window.location.protocol)) {
+    return normalizeBaseUrl(window.location.origin);
+  }
+  return "http://localhost:3000";
+}
+
+function resolveApiBase() {
+  const params = new URLSearchParams(window.location.search || "");
+  const fromQuery = normalizeBaseUrl(params.get("apiBase") || "");
+  if (fromQuery && window.localStorage) {
+    window.localStorage.setItem("NESTSYNC_API_BASE", fromQuery);
+  }
+  const configured =
+    fromQuery ||
+    window.NESTSYNC_API_BASE ||
+    (window.localStorage && window.localStorage.getItem("NESTSYNC_API_BASE")) ||
+    "";
+  return normalizeBaseUrl(configured) || inferDefaultApiBase();
+}
+
+const API_BASE = resolveApiBase();
+
+function resolveUrl(url) {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (!url.startsWith("/")) return `${API_BASE}/${url}`;
+  return `${API_BASE}${url}`;
+}
+
+const socket = io(API_BASE, { autoConnect: false });
 
 const navLinks = document.querySelectorAll(".nav-links li");
 const tabContents = document.querySelectorAll(".tab-content");
@@ -172,7 +206,7 @@ function toAuthPrincipalPayload(identifier) {
 async function requestJson(url, options = {}) {
   let response;
   try {
-    response = await fetch(url, options);
+    response = await fetch(resolveUrl(url), options);
   } catch (error) {
     throw new Error("Server connection failed. Make sure backend is running.");
   }
@@ -853,7 +887,7 @@ window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
     height: "100%",
     width: "100%",
     videoId: "",
-    playerVars: { autoplay: 0, controls: 1, origin: "http://localhost:3000" },
+    playerVars: { autoplay: 0, controls: 1, origin: API_BASE },
     events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
   });
 };

@@ -103,6 +103,7 @@ CREATE TABLE users (
 1. Copy `server/.env.example` to `server/.env` in the same folder.
 2. Fill in Cognito values from your AWS Cognito User Pool (replace `replace_me` placeholders).
 3. Optionally uncomment DynamoDB lines in `server/.env` when you use persistent rooms on AWS (see `docs/dynamodb-nestsync.md`).
+4. Set `CORS_ORIGINS` for production web origins (comma-separated).
 
 The authoritative template is always `server/.env.example`; you can paste it into `server/.env` unchanged first, then edit only what you need.
 
@@ -131,6 +132,8 @@ cd client && npm start
 
 The client is connected by default to  `http://localhost:3000`.
 
+For cloud/web deployment, set `client/runtime-config.js` or append query `?apiBase=https://your-api.example.com` to point the frontend to your backend.
+
 ---
 
 ## Testing
@@ -143,6 +146,36 @@ npm test
 ```
 
 This runs tests for `passwordService`, `phaseAPolicyService`, `registerService`, and `roomService`, and prints a coverage report. See `server/__tests__/README.md` for a full list of test cases.
+
+---
+
+## CI/CD + Cloud Deployment
+
+### GitHub Actions
+
+- Workflow file: `.github/workflows/server-tests.yml`
+- Trigger: push/PR with changes under `server/**`
+- Steps: `cd server && npm ci && npm test`
+
+### Railway (Backend API + Socket.io)
+
+1. Create a Railway service from this repo root.
+2. Railway uses `railway.json` and `server/Dockerfile` to build and run.
+3. Configure environment variables in Railway:
+   - `PORT` (Railway usually injects this automatically)
+   - `AUTH_MODE`, `COGNITO_REGION`, `COGNITO_USER_POOL_ID`, `COGNITO_APP_CLIENT_ID`, `COGNITO_ISSUER`
+   - `ROOM_STORE`, `DYNAMODB_ROOMS_TABLE`, `DYNAMODB_MESSAGES_TABLE`
+   - `CORS_ORIGINS` (include your Vercel domain and local dev if needed)
+4. Verify health endpoint: `https://<railway-domain>/healthz`
+
+### Vercel (Web frontend from `client/`)
+
+1. Import the `client` directory as a Vercel project.
+2. Set environment variable `NESTSYNC_API_BASE=https://<railway-domain>`.
+3. `client/vercel.json` runs `npm run build:web`, which generates `client/runtime-config.js`.
+4. Deploy and open the Vercel URL.
+
+Both clients must point to the same backend URL for real-time room sync.
 
 ---
 
