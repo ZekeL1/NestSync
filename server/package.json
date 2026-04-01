@@ -15,7 +15,10 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.884.0",
+    "@aws-sdk/lib-dynamodb": "^3.884.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.884.0",
+    "bcrypt": "^5.1.1",
     "body-parser": "^2.2.2",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
