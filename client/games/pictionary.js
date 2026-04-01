@@ -1,99 +1,101 @@
 function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, getCurrentRoomId }) {
     gamesRoot.innerHTML = `
-      <div class="glass-panel" style="width:100%; height:100%; padding:18px; box-sizing:border-box; position:relative;">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div style="font-size:1.25rem; font-weight:800;">
-              <i class="fa-solid fa-paintbrush" style="color:#6c5ce7;"></i> Pictionary
+      <div class="glass-panel game-shell game-shell--pictionary">
+        <div class="game-header">
+          <div class="game-header-main">
+            <div class="game-title">
+              <i class="fa-solid fa-paintbrush"></i> Pictionary
             </div>
             <div class="status-pill offline" id="pict-status">Offline</div>
           </div>
 
-                    <div style="display:flex; gap:8px; align-items:center; justify-content:flex-end;">
-                        <button id="pict-next" class="btn-primary" style="height:44px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-forward"></i> Next Round</button>
-                        <button id="pict-end" class="btn-icon" title="End Round">
-                          <i class="fa-solid fa-flag-checkered"></i>
-                        </button>
-                        <button id="pict-back" class="btn-icon" title="Back to Arcade">
-                          <i class="fa-solid fa-arrow-left"></i>
-                        </button>
+          <div class="game-header-actions">
+            <button id="pict-next" class="btn-primary game-action-primary" type="button"><i class="fa-solid fa-forward"></i> Next Round</button>
+            <button id="pict-end" class="btn-icon" title="End Round" type="button">
+              <i class="fa-solid fa-flag-checkered"></i>
+            </button>
+            <button id="pict-back" class="btn-icon" title="Back to Arcade" type="button">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
           </div>
         </div>
 
-        <div id="pict-waiting" class="glass-panel" style="height:calc(100% - 58px); display:flex; align-items:center; justify-content:center; text-align:center;">
-          <div style="width:min(520px, 92%);">
-            <div style="font-size:40px; margin-bottom:8px; color:#6c5ce7;"><i class="fa-solid fa-spinner fa-spin"></i></div>
-            <div style="font-size:20px; font-weight:700; margin-bottom:6px;">Waiting for round to start...</div>
-                        <div id="pict-wait-hint" style="opacity:.75; margin-bottom:14px;">Click Start to begin.</div>
-            <div style="display:flex; justify-content:center; margin-bottom:14px;">
-                            <button id="pict-wait-start" class="btn-primary" style="min-width:220px; height:44px; padding:0 24px; display:flex; align-items:center; justify-content:center; gap:10px; font-size:1rem;"><i class="fa-solid fa-play" style="font-size:1rem;"></i> Start</button>
+        <div id="pict-waiting" class="glass-panel game-wait-screen">
+          <div class="game-wait-card">
+            <div class="game-wait-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>
+            <div class="game-wait-title">Waiting for round to start...</div>
+            <div id="pict-wait-hint" class="game-wait-copy">Click Start to begin.</div>
+            <div class="game-wait-actions">
+              <button id="pict-wait-start" class="btn-primary game-action-primary game-action-wide" type="button"><i class="fa-solid fa-play"></i> Start</button>
             </div>
-            <div class="glass-panel" style="padding:10px; text-align:left;">
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;">
-                <div style="font-weight:800;">Leaderboard</div>
-                <button id="pict-reset-scores" class="btn-icon" title="Reset Scores">
+            <div class="glass-panel game-sidebar-panel game-wait-leaderboard">
+              <div class="game-panel-header">
+                <div class="game-panel-title">Leaderboard</div>
+                <button id="pict-reset-scores" class="btn-icon" title="Reset Scores" type="button">
                   <i class="fa-solid fa-rotate-right"></i>
                 </button>
               </div>
-              <div id="pict-wait-scores" style="max-height:170px; overflow:auto;">-</div>
+              <div id="pict-wait-scores" class="game-scoreboard">-</div>
             </div>
           </div>
         </div>
 
-        <div id="pict-live-area" style="display:none; gap:16px; height:calc(100% - 58px);">
-          <div style="flex:1; min-width:520px;">
-                        <div style="display:flex; flex-direction:column; gap:10px; height:100%;">
-                            <div class="glass-panel" style="padding:8px 10px; border-radius:14px; display:flex; align-items:center; justify-content:space-between;">
-                                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#6c5ce7;">
-                                    <i class="fa-solid fa-pen-ruler"></i>
-                                    <span>Drawing Canvas</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:8px;">
-                                    <button id="pict-tool-brush" class="btn-icon" title="Brush" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-paintbrush"></i></button>
-                                    <button id="pict-tool-eraser" class="btn-icon" title="Eraser" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-eraser"></i></button>
-                                    <button id="pict-tool-clear" class="btn-icon" title="Clear Canvas" style="display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-trash-can"></i></button>
-                                </div>
-                            </div>
+        <div id="pict-live-area" class="game-live-layout" style="display:none;">
+          <div class="game-stage-column">
+            <div class="game-stage-panel">
+              <div class="glass-panel game-stage-toolbar">
+                <div class="game-stage-label">
+                  <i class="fa-solid fa-pen-ruler"></i>
+                  <span>Drawing Canvas</span>
+                </div>
+                <div class="game-stage-tools">
+                  <button id="pict-tool-brush" class="btn-icon" title="Brush" type="button"><i class="fa-solid fa-paintbrush"></i></button>
+                  <button id="pict-tool-eraser" class="btn-icon" title="Eraser" type="button"><i class="fa-solid fa-eraser"></i></button>
+                  <button id="pict-tool-clear" class="btn-icon" title="Clear Canvas" type="button"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+              </div>
 
-                            <div style="position:relative; border-radius:18px; overflow:hidden; background:rgba(255,255,255,0.5); border:2px solid rgba(108,92,231,.36); flex:1; min-height:0; padding:10px; box-sizing:border-box;">
-                                <canvas id="pict-canvas" width="900" height="560" style="width:100%; height:100%; background:#fff; border-radius:14px;"></canvas>
-                            </div>
+              <div class="game-stage-frame pict-stage-frame">
+                <canvas id="pict-canvas" width="900" height="560" class="pict-canvas"></canvas>
+              </div>
             </div>
           </div>
 
-          <div style="width:360px; display:flex; flex-direction:column; gap:12px;">
-            <div class="glass-panel" style="padding:12px;">
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <span style="font-weight:800;">Drawer:</span> <span id="pict-drawer">-</span>
+          <div class="game-side-column">
+            <div class="glass-panel game-sidebar-panel">
+              <div class="game-meta-row">
+                <span class="game-meta-label">Drawer</span>
+                <span id="pict-drawer">-</span>
               </div>
-              <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-                <span style="font-weight:800;">Your word:</span> <span id="pict-word">-</span>
+              <div class="game-meta-row">
+                <span class="game-meta-label">Your word</span>
+                <span id="pict-word">-</span>
               </div>
-              <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-                <span style="font-weight:800; width:100%;">Leaderboard:</span>
-                <div id="pict-scores" style="width:100%; max-height:140px; overflow:auto;">-</div>
+              <div class="game-panel-block">
+                <span class="game-meta-label game-meta-label-block">Leaderboard</span>
+                <div id="pict-scores" class="game-scoreboard">-</div>
               </div>
             </div>
 
-            <div class="chat-wrapper" style="flex:1; min-height:260px;">
+            <div class="chat-wrapper pict-chat-panel">
               <div class="chat-messages" id="pict-log">
                 <div class="chat-msg system"><span>Game ready. Waiting for start.</span></div>
               </div>
               <div class="chat-input-area">
                 <input type="text" id="pict-guess" placeholder="Type your guess...">
-                                <button id="pict-guess-btn" class="btn-primary" style="width:40px; height:40px; min-width:40px; padding:0; border-radius:14px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-paper-plane"></i></button>
+                <button id="pict-guess-btn" class="btn-primary pict-guess-btn" type="button"><i class="fa-solid fa-paper-plane"></i></button>
               </div>
             </div>
           </div>
         </div>
 
-        <div id="pict-word-modal" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.32); border-radius:18px; align-items:center; justify-content:center; z-index:20;">
-          <div class="glass-panel" style="width:min(420px, 92%); padding:16px;">
-            <div style="font-weight:800; font-size:1.1rem; margin-bottom:8px;">Enter answer word</div>
-            <input id="pict-modal-word" class="input-room" style="width:100%; max-width:none;" maxlength="40" placeholder="e.g. apple">
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:12px;">
-              <button id="pict-modal-cancel" class="btn-icon" title="Cancel"><i class="fa-solid fa-xmark"></i></button>
-              <button id="pict-modal-confirm" class="btn-primary"><i class="fa-solid fa-check"></i> Confirm</button>
+        <div id="pict-word-modal" class="game-modal">
+          <div class="glass-panel game-modal-card">
+            <div class="game-modal-title">Enter answer word</div>
+            <input id="pict-modal-word" class="input-room game-modal-input" maxlength="40" placeholder="e.g. apple">
+            <div class="game-modal-actions">
+              <button id="pict-modal-cancel" class="btn-icon" title="Cancel" type="button"><i class="fa-solid fa-xmark"></i></button>
+              <button id="pict-modal-confirm" class="btn-primary" type="button"><i class="fa-solid fa-check"></i> Confirm</button>
             </div>
           </div>
         </div>
