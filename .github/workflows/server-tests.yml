@@ -13,6 +13,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      AUTH_MODE: cognito
+      COGNITO_REGION: us-east-2
+      COGNITO_USER_POOL_ID: ci-test-pool
+      COGNITO_APP_CLIENT_ID: ci-test-client
+      COGNITO_ISSUER: https://cognito-idp.us-east-2.amazonaws.com/ci-test-pool
     defaults:
       run:
         working-directory: server
