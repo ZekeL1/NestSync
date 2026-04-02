@@ -436,6 +436,23 @@ body {
     min-width: 0;
 }
 
+.mobile-topbar-logo {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    letter-spacing: 0.01em;
+}
+
+.mobile-topbar-logo i {
+    color: var(--primary-color);
+    font-size: 1rem;
+    flex: 0 0 auto;
+}
+
 .topbar-mobile-actions {
     display: none;
     align-items: center;
@@ -695,6 +712,62 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     min-height: 0;
 }
 
+.sudoku-live-scale-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sudoku-live-scale-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sudoku-live-scale-content {
+    width: 1180px;
+    max-width: none;
+    margin: 0 auto;
+    transform-origin: top center;
+    will-change: transform;
+}
+
+.pict-live-scale-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pict-live-scale-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pict-live-scale-content {
+    width: 1180px;
+    max-width: none;
+    margin: 0 auto;
+    transform-origin: top center;
+    will-change: transform;
+}
+
 .game-stage-column {
     flex: 1;
     min-width: 0;
@@ -925,7 +998,7 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     gap: 8px;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1499px) {
     body.is-mobile-sheet-open {
         overflow: hidden;
     }
@@ -979,6 +1052,10 @@ body.is-mobile-sheet-open .floating-family-link-btn {
 
     .mobile-panel-toggle,
     .mobile-panel-close {
+        display: inline-flex;
+    }
+
+    .floating-family-link-btn {
         display: inline-flex;
     }
 
@@ -1081,6 +1158,7 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         pointer-events: auto;
         z-index: 80;
         overflow: visible;
+        align-self: center;
     }
 
     .mobile-user-menu-toggle {
@@ -1276,10 +1354,23 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         gap: 8px;
         align-items: stretch;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         grid-template-areas:
-            "room user";
+            "brand room user";
         overflow: visible;
+    }
+
+    .mobile-topbar-logo {
+        display: inline-flex;
+        grid-area: brand;
+        align-self: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.78);
+        box-shadow: inset 0 0 0 1px rgba(108, 92, 231, 0.08);
+        white-space: nowrap;
     }
 
     .topbar-primary-row .status-pill {
@@ -1296,6 +1387,10 @@ body.is-mobile-sheet-open .floating-family-link-btn {
 
     .floating-family-link-btn {
         display: inline-flex;
+    }
+
+    .mobile-topbar-logo i {
+        font-size: 1.08rem;
     }
 
     .btn-icon,
@@ -1574,6 +1669,38 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     .game-live-layout {
         flex-direction: column;
         gap: 12px;
+    }
+
+    .sudoku-live-scale-frame {
+        height: auto !important;
+        overflow: visible;
+    }
+
+    .sudoku-live-scale-inner {
+        height: auto;
+        overflow: visible;
+    }
+
+    .sudoku-live-scale-content {
+        width: 100% !important;
+        max-width: 100%;
+        transform: none !important;
+    }
+
+    .pict-live-scale-frame {
+        height: auto !important;
+        overflow: visible;
+    }
+
+    .pict-live-scale-inner {
+        height: auto;
+        overflow: visible;
+    }
+
+    .pict-live-scale-content {
+        width: 100% !important;
+        max-width: 100%;
+        transform: none !important;
     }
 
     .game-side-column {
