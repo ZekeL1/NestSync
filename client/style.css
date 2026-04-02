@@ -925,7 +925,7 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     gap: 8px;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 1499px) {
     body.is-mobile-sheet-open {
         overflow: hidden;
     }
@@ -979,6 +979,10 @@ body.is-mobile-sheet-open .floating-family-link-btn {
 
     .mobile-panel-toggle,
     .mobile-panel-close {
+        display: inline-flex;
+    }
+
+    .floating-family-link-btn {
         display: inline-flex;
     }
 
