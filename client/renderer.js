@@ -81,7 +81,7 @@ let pendingRoomCreation = false;
 const rtcConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 const projectPasswordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,64}$/;
 const usernamePattern = /^[A-Za-z0-9_.-]{3,32}$/;
-const compactViewportMedia = window.matchMedia("(max-width: 1199px)");
+const compactViewportMedia = window.matchMedia("(max-width: 1499px)");
 const mobileViewportMedia = window.matchMedia("(max-width: 767px)");
 const mobilePanelToggleStorageKey = "nestsync-mobile-panel-toggle-position";
 
@@ -135,6 +135,10 @@ function clampFloatingPanelTogglePosition(position) {
   };
 }
 
+function getDefaultFloatingPanelTogglePosition() {
+  return clampFloatingPanelTogglePosition(null);
+}
+
 function saveFloatingPanelTogglePosition(position) {
   try {
     window.localStorage.setItem(mobilePanelToggleStorageKey, JSON.stringify(position));
@@ -157,6 +161,12 @@ function applyFloatingPanelTogglePosition(position) {
   const nextPosition = clampFloatingPanelTogglePosition(position);
   mobilePanelToggle.style.left = `${nextPosition.x}px`;
   mobilePanelToggle.style.top = `${nextPosition.y}px`;
+}
+
+function resetFloatingPanelTogglePosition() {
+  const nextPosition = getDefaultFloatingPanelTogglePosition();
+  applyFloatingPanelTogglePosition(nextPosition);
+  saveFloatingPanelTogglePosition(nextPosition);
 }
 
 function setMobileNavExpanded(expanded) {
@@ -216,7 +226,7 @@ function syncResponsiveShell() {
   }
 
   if (isCompactViewport()) {
-    applyFloatingPanelTogglePosition(readFloatingPanelTogglePosition());
+    resetFloatingPanelTogglePosition();
   }
 }
 
@@ -782,6 +792,12 @@ if (typeof mobileViewportMedia.addEventListener === "function") {
 } else if (typeof mobileViewportMedia.addListener === "function") {
   mobileViewportMedia.addListener(syncResponsiveShell);
 }
+
+window.addEventListener("resize", () => {
+  if (isCompactViewport()) {
+    resetFloatingPanelTogglePosition();
+  }
+});
 
 showRegisterLink.addEventListener("click", (event) => {
   event.preventDefault();

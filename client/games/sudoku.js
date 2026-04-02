@@ -88,7 +88,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
     function cleanup() {
         stopTimer();
         window.removeEventListener('keydown', onWindowKeyDown);
-        window.removeEventListener('resize', syncBoardSize);
+        window.removeEventListener('resize', syncSudokuLayout);
         if (socket && typeof socket.off === 'function') {
             Object.entries(socketListeners).forEach(([eventName, handler]) => {
                 socket.off(eventName, handler);
@@ -251,7 +251,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         viewerScore = 0;
         setStartedUI(false);
         renderBoard();
-        syncBoardSize();
+        syncSudokuLayout();
         renderMeta();
         renderKeypad();
         renderLeaderboard();
@@ -281,7 +281,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             endBtn.style.opacity = active ? '1' : '.7';
         }
 
-        syncBoardSize();
+        syncSudokuLayout();
     }
 
     function refreshStartAvailability(notify = false) {
@@ -420,7 +420,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
 
         renderDifficultyButtons();
         renderBoard();
-        syncBoardSize();
+        syncSudokuLayout();
         renderMeta();
         renderKeypad();
         renderLeaderboard();
@@ -693,7 +693,7 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
             });
         });
 
-        syncBoardSize();
+        syncSudokuLayout();
     }
 
     function syncBoardSize() {
@@ -714,6 +714,47 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         boardEl.style.maxWidth = '100%';
         boardEl.style.maxHeight = '100%';
         boardEl.style.setProperty('--sudoku-cell-size', `${cellFontSize}px`);
+    }
+
+    function syncLiveLayoutScale() {
+        const liveFrameEl = gamesRoot.querySelector('#sudoku-live-area');
+        const liveInnerEl = gamesRoot.querySelector('#sudoku-live-scale-inner');
+        const liveContentEl = gamesRoot.querySelector('#sudoku-live-scale-content');
+        const sideColumnEl = gamesRoot.querySelector('#sudoku-live-scale-content .game-side-column');
+
+        if (!liveFrameEl || !liveInnerEl || !liveContentEl) return;
+        if (liveFrameEl.offsetParent === null) return;
+
+        const isCompactLayout = window.matchMedia('(max-width: 767px)').matches;
+        const baseWidth = 1180;
+
+        if (sideColumnEl) {
+            sideColumnEl.style.width = isCompactLayout ? '100%' : '360px';
+            sideColumnEl.style.maxWidth = '100%';
+        }
+
+        liveInnerEl.style.height = isCompactLayout ? 'auto' : '100%';
+        liveContentEl.style.flexDirection = isCompactLayout ? 'column' : 'row';
+        liveContentEl.style.width = isCompactLayout ? '100%' : `${baseWidth}px`;
+        liveContentEl.style.maxWidth = 'none';
+        liveContentEl.style.transform = 'none';
+
+        if (isCompactLayout) {
+            liveFrameEl.style.height = 'auto';
+            return;
+        }
+
+        const availableWidth = Math.max(320, liveFrameEl.clientWidth);
+        const scale = availableWidth / baseWidth;
+        const naturalHeight = liveContentEl.scrollHeight || liveContentEl.offsetHeight || 0;
+
+        liveContentEl.style.transform = `scale(${scale})`;
+        liveFrameEl.style.height = `${Math.ceil(naturalHeight * scale)}px`;
+    }
+
+    function syncSudokuLayout() {
+        syncBoardSize();
+        syncLiveLayoutScale();
     }
 
     function renderKeypad() {
@@ -982,60 +1023,64 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
               </div>
             </div>
 
-            <div id="sudoku-live-area" class="game-live-layout" style="display:none;">
-              <div class="game-stage-column">
-                <div id="sudoku-board-panel" class="game-stage-panel">
-                  <div class="glass-panel game-stage-toolbar">
-                    <div class="game-stage-label">
-                      <i class="fa-solid fa-table-cells"></i>
-                      <span>Puzzle Board</span>
+            <div id="sudoku-live-area" class="sudoku-live-scale-frame" style="display:none;">
+              <div id="sudoku-live-scale-inner" class="sudoku-live-scale-inner">
+                <div id="sudoku-live-scale-content" class="game-live-layout sudoku-live-scale-content">
+                  <div class="game-stage-column">
+                  <div id="sudoku-board-panel" class="game-stage-panel">
+                    <div class="glass-panel game-stage-toolbar">
+                      <div class="game-stage-label">
+                        <i class="fa-solid fa-table-cells"></i>
+                        <span>Puzzle Board</span>
+                      </div>
+                      <div id="sudoku-hint" class="status-pill online sudoku-hint-pill">Waiting</div>
                     </div>
-                    <div id="sudoku-hint" class="status-pill online sudoku-hint-pill">Waiting</div>
-                  </div>
 
-                  <div class="sudoku-stage-shell">
-                    <div id="sudoku-board-stage" class="sudoku-board-stage">
-                      <div id="sudoku-board" class="sudoku-board-grid"></div>
+                    <div class="sudoku-stage-shell">
+                      <div id="sudoku-board-stage" class="sudoku-board-stage">
+                        <div id="sudoku-board" class="sudoku-board-grid"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="game-side-column">
-                <div class="glass-panel game-sidebar-panel">
-                  <div class="game-panel-title">Puzzle Stats</div>
-                  <div class="game-meta-row">
-                    <span class="game-meta-label">Timer</span>
-                    <strong id="sudoku-timer">00:00</strong>
+                  <div class="game-side-column">
+                  <div class="glass-panel game-sidebar-panel">
+                    <div class="game-panel-title">Puzzle Stats</div>
+                    <div class="game-meta-row">
+                      <span class="game-meta-label">Timer</span>
+                      <strong id="sudoku-timer">00:00</strong>
+                    </div>
+                    <div class="game-meta-row">
+                      <span class="game-meta-label">Round</span>
+                      <strong id="sudoku-round-value">-</strong>
+                    </div>
+                    <div class="game-meta-row">
+                      <span class="game-meta-label">Difficulty</span>
+                      <strong data-sudoku-difficulty>Medium</strong>
+                    </div>
+                    <div class="game-meta-row">
+                      <span class="game-meta-label">Filled</span>
+                      <strong id="sudoku-filled-value">0 / 81</strong>
+                    </div>
+                    <div class="game-meta-row">
+                      <span class="game-meta-label">Mistakes</span>
+                      <strong id="sudoku-mistakes-value">0</strong>
+                    </div>
                   </div>
-                  <div class="game-meta-row">
-                    <span class="game-meta-label">Round</span>
-                    <strong id="sudoku-round-value">-</strong>
+
+                  <div class="glass-panel game-sidebar-panel">
+                    <div class="game-panel-title">Keypad</div>
+                    <div id="sudoku-keypad" class="sudoku-keypad-grid"></div>
                   </div>
-                  <div class="game-meta-row">
-                    <span class="game-meta-label">Difficulty</span>
-                    <strong data-sudoku-difficulty>Medium</strong>
+
+                  <div class="glass-panel game-sidebar-panel">
+                    <div class="game-panel-title">Leaderboard</div>
+                    <div data-sudoku-scoreboard class="game-scoreboard">-</div>
                   </div>
-                  <div class="game-meta-row">
-                    <span class="game-meta-label">Filled</span>
-                    <strong id="sudoku-filled-value">0 / 81</strong>
-                  </div>
-                  <div class="game-meta-row">
-                    <span class="game-meta-label">Mistakes</span>
-                    <strong id="sudoku-mistakes-value">0</strong>
-                  </div>
+
                 </div>
-
-                <div class="glass-panel game-sidebar-panel">
-                  <div class="game-panel-title">Keypad</div>
-                  <div id="sudoku-keypad" class="sudoku-keypad-grid"></div>
                 </div>
-
-                <div class="glass-panel game-sidebar-panel">
-                  <div class="game-panel-title">Leaderboard</div>
-                  <div data-sudoku-scoreboard class="game-scoreboard">-</div>
-                </div>
-
               </div>
             </div>
           </div>
@@ -1080,12 +1125,12 @@ function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurr
         renderKeypad();
         renderLeaderboard();
         renderMeta();
-        syncBoardSize();
+        syncSudokuLayout();
     }
 
     renderShell();
     window.addEventListener('keydown', onWindowKeyDown);
-    window.addEventListener('resize', syncBoardSize);
+    window.addEventListener('resize', syncSudokuLayout);
     if (socket && typeof socket.on === 'function') {
         Object.entries(socketListeners).forEach(([eventName, handler]) => {
             socket.on(eventName, handler);
