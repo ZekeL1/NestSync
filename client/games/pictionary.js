@@ -1,4 +1,8 @@
 function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, getCurrentRoomId }) {
+    if (typeof window.cleanupPictionaryGame === 'function') {
+        window.cleanupPictionaryGame();
+    }
+
     gamesRoot.innerHTML = `
       <div class="glass-panel game-shell game-shell--pictionary">
         <div class="game-header">
@@ -40,51 +44,55 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
           </div>
         </div>
 
-        <div id="pict-live-area" class="game-live-layout" style="display:none;">
-          <div class="game-stage-column">
-            <div class="game-stage-panel">
-              <div class="glass-panel game-stage-toolbar">
-                <div class="game-stage-label">
-                  <i class="fa-solid fa-pen-ruler"></i>
-                  <span>Drawing Canvas</span>
+        <div id="pict-live-area" class="pict-live-scale-frame" style="display:none;">
+          <div id="pict-live-scale-inner" class="pict-live-scale-inner">
+            <div id="pict-live-scale-content" class="game-live-layout pict-live-scale-content">
+              <div class="game-stage-column">
+              <div class="game-stage-panel">
+                <div class="glass-panel game-stage-toolbar">
+                  <div class="game-stage-label">
+                    <i class="fa-solid fa-pen-ruler"></i>
+                    <span>Drawing Canvas</span>
+                  </div>
+                  <div class="game-stage-tools">
+                    <button id="pict-tool-brush" class="btn-icon" title="Brush" type="button"><i class="fa-solid fa-paintbrush"></i></button>
+                    <button id="pict-tool-eraser" class="btn-icon" title="Eraser" type="button"><i class="fa-solid fa-eraser"></i></button>
+                    <button id="pict-tool-clear" class="btn-icon" title="Clear Canvas" type="button"><i class="fa-solid fa-trash-can"></i></button>
+                  </div>
                 </div>
-                <div class="game-stage-tools">
-                  <button id="pict-tool-brush" class="btn-icon" title="Brush" type="button"><i class="fa-solid fa-paintbrush"></i></button>
-                  <button id="pict-tool-eraser" class="btn-icon" title="Eraser" type="button"><i class="fa-solid fa-eraser"></i></button>
-                  <button id="pict-tool-clear" class="btn-icon" title="Clear Canvas" type="button"><i class="fa-solid fa-trash-can"></i></button>
+
+                <div class="game-stage-frame pict-stage-frame">
+                  <canvas id="pict-canvas" width="900" height="560" class="pict-canvas"></canvas>
                 </div>
-              </div>
-
-              <div class="game-stage-frame pict-stage-frame">
-                <canvas id="pict-canvas" width="900" height="560" class="pict-canvas"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <div class="game-side-column">
-            <div class="glass-panel game-sidebar-panel">
-              <div class="game-meta-row">
-                <span class="game-meta-label">Drawer</span>
-                <span id="pict-drawer">-</span>
-              </div>
-              <div class="game-meta-row">
-                <span class="game-meta-label">Your word</span>
-                <span id="pict-word">-</span>
-              </div>
-              <div class="game-panel-block">
-                <span class="game-meta-label game-meta-label-block">Leaderboard</span>
-                <div id="pict-scores" class="game-scoreboard">-</div>
               </div>
             </div>
 
-            <div class="chat-wrapper pict-chat-panel">
-              <div class="chat-messages" id="pict-log">
-                <div class="chat-msg system"><span>Game ready. Waiting for start.</span></div>
+              <div class="game-side-column">
+              <div class="glass-panel game-sidebar-panel">
+                <div class="game-meta-row">
+                  <span class="game-meta-label">Drawer</span>
+                  <span id="pict-drawer">-</span>
+                </div>
+                <div class="game-meta-row">
+                  <span class="game-meta-label">Your word</span>
+                  <span id="pict-word">-</span>
+                </div>
+                <div class="game-panel-block">
+                  <span class="game-meta-label game-meta-label-block">Leaderboard</span>
+                  <div id="pict-scores" class="game-scoreboard">-</div>
+                </div>
               </div>
-              <div class="chat-input-area">
-                <input type="text" id="pict-guess" placeholder="Type your guess...">
-                <button id="pict-guess-btn" class="btn-primary pict-guess-btn" type="button"><i class="fa-solid fa-paper-plane"></i></button>
+
+              <div class="chat-wrapper pict-chat-panel">
+                <div class="chat-messages" id="pict-log">
+                  <div class="chat-msg system"><span>Game ready. Waiting for start.</span></div>
+                </div>
+                <div class="chat-input-area">
+                  <input type="text" id="pict-guess" placeholder="Type your guess...">
+                  <button id="pict-guess-btn" class="btn-primary pict-guess-btn" type="button"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -148,6 +156,16 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     let isDrawing = false;
     let last = null;
     let activeRoomId = getJoinedRoomId();
+
+    function cleanup() {
+        window.removeEventListener('resize', syncPictLayoutScale);
+        window.removeEventListener('mouseup', stopDrawing);
+        if (window.cleanupPictionaryGame === cleanup) {
+            delete window.cleanupPictionaryGame;
+        }
+    }
+
+    window.cleanupPictionaryGame = cleanup;
 
     function appendGameMsg(text, type = 'system') {
         const div = document.createElement('div');
@@ -215,6 +233,42 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    function syncPictLayoutScale() {
+        const liveFrame = document.getElementById('pict-live-area');
+        const liveInner = document.getElementById('pict-live-scale-inner');
+        const liveContent = document.getElementById('pict-live-scale-content');
+        const sideColumn = liveContent ? liveContent.querySelector('.game-side-column') : null;
+
+        if (!liveFrame || !liveInner || !liveContent) return;
+        if (liveFrame.offsetParent === null) return;
+
+        const isCompactLayout = window.matchMedia('(max-width: 767px)').matches;
+        const baseWidth = 1180;
+
+        if (sideColumn) {
+            sideColumn.style.width = isCompactLayout ? '100%' : '360px';
+            sideColumn.style.maxWidth = '100%';
+        }
+
+        liveInner.style.height = isCompactLayout ? 'auto' : '100%';
+        liveContent.style.flexDirection = isCompactLayout ? 'column' : 'row';
+        liveContent.style.width = isCompactLayout ? '100%' : `${baseWidth}px`;
+        liveContent.style.maxWidth = 'none';
+        liveContent.style.transform = 'none';
+
+        if (isCompactLayout) {
+            liveFrame.style.height = 'auto';
+            return;
+        }
+
+        const availableWidth = Math.max(320, liveFrame.clientWidth);
+        const scale = availableWidth / baseWidth;
+        const naturalHeight = liveContent.scrollHeight || liveContent.offsetHeight || 0;
+
+        liveContent.style.transform = `scale(${scale})`;
+        liveFrame.style.height = `${Math.ceil(naturalHeight * scale)}px`;
+    }
+
     function setRoundUI(active) {
         roundActive = !!active;
         waitingEl.style.display = roundActive ? 'none' : 'flex';
@@ -229,6 +283,8 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
             wordEl.innerText = '-';
             stopDrawing();
         }
+
+        syncPictLayoutScale();
     }
 
     function updateStatus() {
@@ -680,6 +736,8 @@ function mountPictionaryGame({ gamesRoot, socket, showToast, getCurrentUser, get
     setRoundUI(false);
     refreshStartAvailability(true);
     updateStatus();
+    syncPictLayoutScale();
+    window.addEventListener('resize', syncPictLayoutScale);
 }
 
 window.mountPictionaryGame = mountPictionaryGame;
