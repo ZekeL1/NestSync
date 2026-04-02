@@ -51,9 +51,25 @@ Tests for user registration: validation and Cognito integration.
 | Invalid role | Returns 400 when role is not "parent" or "child" |
 | Password too short | Returns 400 when password has fewer than 6 characters |
 | Invalid username format | Returns 400 when username is shorter than 3 characters |
+| Invalid email format | Returns 400 when email is malformed |
 | Valid payload | Calls Cognito and returns 201 when all fields are valid |
+| Payload normalization | Lowercases email and trims nickname before Cognito call |
+| Duplicate email | Maps `EmailAlreadyExistsException` to 409 |
+| InvalidPasswordException | Maps Cognito password policy failure to 400 |
 
-### 4. `roomService.test.js`
+### 4. `loginService.test.js`
+
+Tests for Cognito login flow: input validation, policy checks, token verification, and Cognito error mapping.
+
+| Test | Description |
+|------|-------------|
+| Missing principal/password | Returns 400 when login payload is incomplete |
+| Policy failure | Returns the policy error before contacting Cognito |
+| Successful login | Resolves username, logs in with Cognito, verifies token, and returns user data |
+| Missing role in token | Returns 403 when verified token lacks a role |
+| Error mapping | Covers invalid credentials, unconfirmed user, password reset required, missing AWS credentials, and unexpected errors |
+
+### 5. `roomService.test.js`
 
 Uses the **memory** room store (`ROOM_STORE=memory`). Each test clears the in-memory store via `clearForTests()`.
 
@@ -61,6 +77,7 @@ Uses the **memory** room store (`ROOM_STORE=memory`). Each test clears the in-me
 |------|-------------|
 | Creates a room for parent | Returns a 4-digit `roomId` |
 | Empty password string | Treated as no room password (`requiresPassword` false) |
+| Password hashing | Stores a bcrypt hash instead of the raw room password |
 | Parent access | Parent can access their own room |
 | Missing room | `NOT_FOUND` / 404 for bogus `roomId` |
 | Wrong parent | `NOT_ROOM_PARENT` / 403 if another user joins as parent |
@@ -73,6 +90,8 @@ Uses the **memory** room store (`ROOM_STORE=memory`). Each test clears the in-me
 | Missing room meta | `exists: false` |
 | Chat | Single message persisted |
 | Multiple messages | Order preserved (`a` then `b`) |
+| Message limit | Returns only the latest `n` chat messages |
+| Pagination | Supports `startAfter` to fetch messages after a known sort key |
 
 ## Running Tests
 
