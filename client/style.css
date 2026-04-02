@@ -712,6 +712,62 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     min-height: 0;
 }
 
+.sudoku-live-scale-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sudoku-live-scale-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sudoku-live-scale-content {
+    width: 1180px;
+    max-width: none;
+    margin: 0 auto;
+    transform-origin: top center;
+    will-change: transform;
+}
+
+.pict-live-scale-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pict-live-scale-inner {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pict-live-scale-content {
+    width: 1180px;
+    max-width: none;
+    margin: 0 auto;
+    transform-origin: top center;
+    will-change: transform;
+}
+
 .game-stage-column {
     flex: 1;
     min-width: 0;
@@ -1613,6 +1669,38 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     .game-live-layout {
         flex-direction: column;
         gap: 12px;
+    }
+
+    .sudoku-live-scale-frame {
+        height: auto !important;
+        overflow: visible;
+    }
+
+    .sudoku-live-scale-inner {
+        height: auto;
+        overflow: visible;
+    }
+
+    .sudoku-live-scale-content {
+        width: 100% !important;
+        max-width: 100%;
+        transform: none !important;
+    }
+
+    .pict-live-scale-frame {
+        height: auto !important;
+        overflow: visible;
+    }
+
+    .pict-live-scale-inner {
+        height: auto;
+        overflow: visible;
+    }
+
+    .pict-live-scale-content {
+        width: 100% !important;
+        max-width: 100%;
+        transform: none !important;
     }
 
     .game-side-column {
