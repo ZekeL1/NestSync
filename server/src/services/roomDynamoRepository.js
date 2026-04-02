@@ -20,17 +20,19 @@ function getDocClient() {
 }
 
 async function putRoom(room) {
+  const item = {
+    roomId: room.roomId,
+    parentUserId: room.parentUserId,
+    status: room.status,
+    createdAt: room.createdAt
+  };
+  if (room.childUserId) item.childUserId = room.childUserId;
+  if (room.passwordHash) item.passwordHash = room.passwordHash;
+
   await getDocClient().send(
     new PutCommand({
       TableName: config.dynamoRoomsTable,
-      Item: {
-        roomId: room.roomId,
-        parentUserId: room.parentUserId,
-        childUserId: room.childUserId ?? null,
-        status: room.status,
-        passwordHash: room.passwordHash ?? null,
-        createdAt: room.createdAt
-      },
+      Item: item,
       ConditionExpression: "attribute_not_exists(roomId)"
     })
   );
@@ -57,9 +59,11 @@ async function bindChildIfAllowed(roomId, childUserId) {
         ExpressionAttributeValues: {
           ":c": childUserId,
           ":s": "BOUND",
-          ":uid": childUserId
+          ":uid": childUserId,
+          ":nullType": "NULL"
         },
-        ConditionExpression: "attribute_not_exists(childUserId) OR childUserId = :uid"
+        ConditionExpression:
+          "attribute_not_exists(childUserId) OR attribute_type(childUserId, :nullType) OR childUserId = :uid"
       })
     );
     return { ok: true };
