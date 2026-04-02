@@ -436,6 +436,23 @@ body {
     min-width: 0;
 }
 
+.mobile-topbar-logo {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    letter-spacing: 0.01em;
+}
+
+.mobile-topbar-logo i {
+    color: var(--primary-color);
+    font-size: 1rem;
+    flex: 0 0 auto;
+}
+
 .topbar-mobile-actions {
     display: none;
     align-items: center;
@@ -1085,6 +1102,7 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         pointer-events: auto;
         z-index: 80;
         overflow: visible;
+        align-self: center;
     }
 
     .mobile-user-menu-toggle {
@@ -1280,10 +1298,23 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         gap: 8px;
         align-items: stretch;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         grid-template-areas:
-            "room user";
+            "brand room user";
         overflow: visible;
+    }
+
+    .mobile-topbar-logo {
+        display: inline-flex;
+        grid-area: brand;
+        align-self: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.78);
+        box-shadow: inset 0 0 0 1px rgba(108, 92, 231, 0.08);
+        white-space: nowrap;
     }
 
     .topbar-primary-row .status-pill {
@@ -1300,6 +1331,10 @@ body.is-mobile-sheet-open .floating-family-link-btn {
 
     .floating-family-link-btn {
         display: inline-flex;
+    }
+
+    .mobile-topbar-logo i {
+        font-size: 1.08rem;
     }
 
     .btn-icon,
