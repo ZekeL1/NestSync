@@ -7,6 +7,13 @@ app.commandLine.appendSwitch('enable-zero-copy');
 
 let mainWindow;
 
+function getRendererUrl() {
+    const localUiUrl = 'http://localhost:3000';
+    const apiBase = String(process.env.NESTSYNC_API_BASE || '').trim().replace(/\/+$/, '');
+    if (!apiBase) return localUiUrl;
+    return `${localUiUrl}?apiBase=${encodeURIComponent(apiBase)}`;
+}
+
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1300, 
@@ -26,7 +33,7 @@ function createWindow() {
         }
     });
 
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL(getRendererUrl());
     mainWindow.once('ready-to-show', () => mainWindow.show());
     mainWindow.on('closed', () => mainWindow = null);
 }
