@@ -38,6 +38,18 @@ describe("roomService (memory store)", () => {
     expect(meta.requiresPassword).toBe(false);
   });
 
+  it("hashes non-empty room passwords before storing", async () => {
+    const r = await roomService.createRoomForParent({
+      parentUserId: "parent-secret",
+      passwordPlain: "secret123"
+    });
+
+    const storedRoom = await roomMemoryRepository.getRoom(r.roomId);
+
+    expect(storedRoom.passwordHash).toBeTruthy();
+    expect(storedRoom.passwordHash).not.toBe("secret123");
+  });
+
   it("allows parent to access own room", async () => {
     const { roomId } = await roomService.createRoomForParent({
       parentUserId: "p1",
@@ -243,5 +255,74 @@ describe("roomService (memory store)", () => {
     });
     const { items } = await roomService.getMessages(roomId, { limit: 10 });
     expect(items.map((m) => m.text).join(",")).toBe("a,b");
+  });
+
+  it("returns only the latest messages when limit is smaller than history", async () => {
+    const { roomId } = await roomService.createRoomForParent({
+      parentUserId: "p-limit",
+      passwordPlain: undefined
+    });
+
+    await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-limit",
+      senderRole: "parent",
+      nickname: "P",
+      text: "a"
+    });
+    await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-limit",
+      senderRole: "parent",
+      nickname: "P",
+      text: "b"
+    });
+    await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-limit",
+      senderRole: "parent",
+      nickname: "P",
+      text: "c"
+    });
+
+    const { items } = await roomService.getMessages(roomId, { limit: 2 });
+
+    expect(items.map((message) => message.text)).toEqual(["b", "c"]);
+  });
+
+  it("supports pagination with startAfter sort key", async () => {
+    const { roomId } = await roomService.createRoomForParent({
+      parentUserId: "p-page",
+      passwordPlain: undefined
+    });
+
+    const first = await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-page",
+      senderRole: "parent",
+      nickname: "P",
+      text: "first"
+    });
+    await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-page",
+      senderRole: "parent",
+      nickname: "P",
+      text: "second"
+    });
+    await roomService.appendChatMessage({
+      roomId,
+      senderId: "p-page",
+      senderRole: "parent",
+      nickname: "P",
+      text: "third"
+    });
+
+    const { items } = await roomService.getMessages(roomId, {
+      limit: 10,
+      startAfter: first.sortKey
+    });
+
+    expect(items.map((message) => message.text)).toEqual(["second", "third"]);
   });
 });
