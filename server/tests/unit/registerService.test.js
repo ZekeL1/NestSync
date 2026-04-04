@@ -1,10 +1,10 @@
-const { registerWithAuth } = require("../src/services/registerService");
+const { registerWithAuth } = require("../../src/services/registerService");
 
-jest.mock("../src/auth/cognitoService", () => ({
+jest.mock("../../src/auth/cognitoService", () => ({
   registerUserWithCognito: jest.fn()
 }));
 
-jest.mock("../src/config", () => ({
+jest.mock("../../src/config", () => ({
   config: {
     authMode: "cognito",
     cognitoRegion: "us-east-2",
@@ -14,7 +14,7 @@ jest.mock("../src/config", () => ({
   }
 }));
 
-const cognito = require("../src/auth/cognitoService");
+const cognito = require("../../src/auth/cognitoService");
 
 describe("registerService", () => {
   beforeEach(() => {

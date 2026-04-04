@@ -4,7 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "jest --coverage --coverageReporters=text",
+    "test": "node ./node_modules/jest/bin/jest.js --coverage --coverageReporters=text",
+    "test:unit": "node ./node_modules/jest/bin/jest.js --selectProjects unit --coverage --coverageReporters=text",
+    "test:integration": "node ./node_modules/jest/bin/jest.js --selectProjects integration",
+    "test:system": "node ./node_modules/jest/bin/jest.js --selectProjects system --runInBand",
     "start": "node server.js"
   },
   "keywords": [],

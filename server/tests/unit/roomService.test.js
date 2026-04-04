@@ -1,4 +1,4 @@
-jest.mock("../src/config", () => ({
+jest.mock("../../src/config", () => ({
   config: {
     authMode: "cognito",
     cognitoRegion: "us-east-2",
@@ -11,8 +11,8 @@ jest.mock("../src/config", () => ({
   }
 }));
 
-const roomMemoryRepository = require("../src/services/roomMemoryRepository");
-const roomService = require("../src/services/roomService");
+const roomMemoryRepository = require("../../src/services/roomMemoryRepository");
+const roomService = require("../../src/services/roomService");
 
 describe("roomService (memory store)", () => {
   beforeEach(() => {

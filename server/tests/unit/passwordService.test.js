@@ -1,19 +1,19 @@
 const {
   requestPasswordReset,
   confirmPasswordReset
-} = require("../src/services/passwordService");
+} = require("../../src/services/passwordService");
 
-jest.mock("../src/services/phaseAPolicyService", () => ({
+jest.mock("../../src/services/phaseAPolicyService", () => ({
   enforceCognitoOnlyForLogin: jest.fn()
 }));
 
-jest.mock("../src/auth/cognitoService", () => ({
+jest.mock("../../src/auth/cognitoService", () => ({
   sendForgotPasswordCode: jest.fn(),
   confirmForgotPassword: jest.fn()
 }));
 
-const cognitoService = require("../src/auth/cognitoService");
-const phaseAPolicyService = require("../src/services/phaseAPolicyService");
+const cognitoService = require("../../src/auth/cognitoService");
+const phaseAPolicyService = require("../../src/services/phaseAPolicyService");
 
 describe("passwordService", () => {
   beforeEach(() => {

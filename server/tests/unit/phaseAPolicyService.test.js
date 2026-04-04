@@ -1,4 +1,4 @@
-jest.mock("../src/config", () => ({
+jest.mock("../../src/config", () => ({
   config: {
     authMode: "cognito",
     cognitoRegion: "us-east-2",
@@ -8,11 +8,11 @@ jest.mock("../src/config", () => ({
   }
 }));
 
-const { config } = require("../src/config");
+const { config } = require("../../src/config");
 const {
   enforceCognitoOnlyForLogin,
   enforceCognitoOnlyForRegister
-} = require("../src/services/phaseAPolicyService");
+} = require("../../src/services/phaseAPolicyService");
 
 describe("phaseAPolicyService", () => {
   afterEach(() => {

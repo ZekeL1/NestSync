@@ -1,4 +1,12 @@
 {
+  "private": true,
+  "scripts": {
+    "pretest": "npm --prefix server install --include=dev --no-fund --no-audit",
+    "test": "npm --prefix server test",
+    "test:unit": "npm --prefix server run test:unit",
+    "test:integration": "npm --prefix server run test:integration",
+    "test:system": "npm --prefix server run test:system"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",

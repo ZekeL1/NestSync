@@ -1,20 +1,20 @@
-jest.mock("../src/auth/cognitoService", () => ({
+jest.mock("../../src/auth/cognitoService", () => ({
   loginWithCognito: jest.fn(),
   resolveCognitoUsername: jest.fn()
 }));
 
-jest.mock("../src/auth/tokenService", () => ({
+jest.mock("../../src/auth/tokenService", () => ({
   verifyToken: jest.fn()
 }));
 
-jest.mock("../src/services/phaseAPolicyService", () => ({
+jest.mock("../../src/services/phaseAPolicyService", () => ({
   enforceCognitoOnlyForLogin: jest.fn()
 }));
 
-const { loginWithAuth } = require("../src/services/loginService");
-const cognitoService = require("../src/auth/cognitoService");
-const tokenService = require("../src/auth/tokenService");
-const phaseAPolicyService = require("../src/services/phaseAPolicyService");
+const { loginWithAuth } = require("../../src/services/loginService");
+const cognitoService = require("../../src/auth/cognitoService");
+const tokenService = require("../../src/auth/tokenService");
+const phaseAPolicyService = require("../../src/services/phaseAPolicyService");
 
 describe("loginService", () => {
   beforeEach(() => {
