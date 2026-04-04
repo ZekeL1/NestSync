@@ -1092,6 +1092,18 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         gap: 12px;
     }
 
+    html.tales-reader-open,
+    body.tales-reader-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
+    }
+
+    /* Inner tale UI still needs taps; only block page-level panning */
+    body.tales-reader-open .tales-reader {
+        touch-action: manipulation;
+    }
+
     .window-drag-bar {
         display: none;
     }
@@ -1620,28 +1632,84 @@ body.is-mobile-sheet-open .floating-family-link-btn {
         gap: 16px;
     }
 
+    /* Lift main stack above bottom nav (sidebar z-index 45) so tale controls are not covered */
+    body.tales-reader-open .main-wrapper {
+        z-index: 47;
+    }
+
+    /* Tales reader: image + text split half/half; bottom inset matches body so nav sits above tab bar */
     .tales-reader {
-        padding: 16px;
-        border-radius: 24px;
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100vh;
+        max-height: 100dvh;
+        box-sizing: border-box;
+        padding: 12px;
+        /* Same reserve as body bottom padding — keeps Prev / Read / Next above Cinema · Arcade · Tales */
+        padding-bottom: calc(104px + env(safe-area-inset-bottom));
+        border-radius: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
     .tales-reader-inner {
+        flex: 1 1 0%;
+        min-height: 0;
+        display: flex;
         flex-direction: column;
-        gap: 16px;
-        padding-top: 58px;
+        gap: 10px;
+        padding-top: 52px;
+        overflow: hidden;
     }
 
     .tales-page-illustration {
-        flex: none;
+        flex: 1 1 0%;
+        min-height: 0;
         width: 100%;
-        min-height: 220px;
+        max-height: none;
+        border-radius: 16px;
+    }
+
+    .tales-page-text-wrap {
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow: hidden;
+        padding: 6px 0;
+    }
+
+    .tales-reader-story-title {
+        font-size: 1.1rem;
+        margin-bottom: 6px;
+    }
+
+    .tales-page-text {
+        font-size: 0.95rem;
+        line-height: 1.55;
     }
 
     .tales-nav {
-        gap: 12px;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        padding: 14px;
+        flex-shrink: 0;
+        gap: 8px;
+        flex-wrap: nowrap;
+        justify-content: center;
+        padding: 10px 8px;
+        margin-top: 8px;
+    }
+
+    .tales-btn {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+        border-radius: 12px;
+    }
+
+    .tales-page-indicator {
+        font-size: 0.82rem;
+        min-width: 44px;
     }
 
     .ai-tales-actions {
