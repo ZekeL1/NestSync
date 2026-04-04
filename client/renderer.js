@@ -1495,6 +1495,7 @@ const talesPaneAi = document.getElementById("tales-pane-ai");
 
 let currentTaleId = null;
 let currentTalePage = 0;
+let talesViewportScrollY = 0;
 
 function stopTaleSpeech() {
   if (typeof window.speechSynthesis !== "undefined") {
@@ -1553,6 +1554,12 @@ function openTale(storyId) {
     talesTab.scrollTop = 0;
     talesTab.classList.add("tales-reader-open");
   }
+  talesViewportScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  document.documentElement.classList.add("tales-reader-open");
+  document.body.classList.add("tales-reader-open");
   talesReader.hidden = false;
   renderTalePage();
 }
@@ -1561,9 +1568,13 @@ function closeTale() {
   if (!talesReader) return;
   stopTaleSpeech();
   talesReader.hidden = true;
+  document.documentElement.classList.remove("tales-reader-open");
+  document.body.classList.remove("tales-reader-open");
   if (talesReader.parentElement) {
     talesReader.parentElement.classList.remove("tales-reader-open");
   }
+  window.scrollTo(0, talesViewportScrollY);
+  talesViewportScrollY = 0;
   currentTaleId = null;
   currentTalePage = 0;
 }
