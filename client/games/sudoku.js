@@ -1,4 +1,7 @@
 function mountSudokuGame({ gamesRoot, socket, showToast, getCurrentUser, getCurrentRoomId }) {
+    if (typeof window.cleanupLinkMatchGame === 'function') {
+        window.cleanupLinkMatchGame();
+    }
     if (typeof window.cleanupSudokuGame === 'function') {
         window.cleanupSudokuGame();
     }

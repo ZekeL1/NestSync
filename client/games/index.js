@@ -32,6 +32,21 @@ function initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId }
         });
     }
 
+    function openLinkMatch() {
+        if (typeof window.mountLinkMatchGame !== 'function') {
+            showToast('Link Match module failed to load');
+            return;
+        }
+
+        window.mountLinkMatchGame({
+            gamesRoot,
+            socket,
+            showToast,
+            getCurrentUser,
+            getCurrentRoomId,
+        });
+    }
+
     gamesRoot.innerHTML = `
       <div class="glass-panel arcade-shell">
         <div class="arcade-header">
@@ -50,18 +65,20 @@ function initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId }
             <div class="arcade-card-copy">Draw and guess with your room members.</div>
           </button>
 
-          <div class="glass-panel arcade-card arcade-card-muted">
-            <div class="arcade-card-title"><i class="fa-solid fa-plus"></i> More games</div>
-            <div class="arcade-card-copy">Coming soon...</div>
-          </div>
+          <button id="arcade-open-linkmatch" class="glass-panel arcade-card" type="button">
+            <div class="arcade-card-title"><i class="fa-solid fa-link"></i> Link Match</div>
+            <div class="arcade-card-copy">Link Match race: cross-shaped void, same board for both; path shown on match. Requires width ≥1024px.</div>
+          </button>
         </div>
       </div>
     `;
 
     const openSudokuBtn = document.getElementById('arcade-open-sudoku');
     const openBtn = document.getElementById('arcade-open-pictionary');
+    const openLinkMatchBtn = document.getElementById('arcade-open-linkmatch');
     if (openSudokuBtn) openSudokuBtn.addEventListener('click', openSudoku);
     if (openBtn) openBtn.addEventListener('click', openPictionary);
+    if (openLinkMatchBtn) openLinkMatchBtn.addEventListener('click', openLinkMatch);
 }
 
 window.initArcadeGames = initArcadeGames;
