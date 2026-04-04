@@ -47,6 +47,36 @@ function initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId }
         });
     }
 
+    function openQuickBoat() {
+        if (typeof window.mountQuickBoatGame !== 'function') {
+            showToast('Quick Boat module failed to load');
+            return;
+        }
+
+        window.mountQuickBoatGame({
+            gamesRoot,
+            socket,
+            showToast,
+            getCurrentUser,
+            getCurrentRoomId,
+        });
+    }
+
+    function openLoveLetter() {
+        if (typeof window.mountLoveLetterGame !== 'function') {
+            showToast('Love Letter module failed to load');
+            return;
+        }
+
+        window.mountLoveLetterGame({
+            gamesRoot,
+            socket,
+            showToast,
+            getCurrentUser,
+            getCurrentRoomId,
+        });
+    }
+
     gamesRoot.innerHTML = `
       <div class="glass-panel arcade-shell">
         <div class="arcade-header">
@@ -67,18 +97,33 @@ function initArcadeGames({ socket, showToast, getCurrentUser, getCurrentRoomId }
 
           <button id="arcade-open-linkmatch" class="glass-panel arcade-card" type="button">
             <div class="arcade-card-title"><i class="fa-solid fa-link"></i> Link Match</div>
-            <div class="arcade-card-copy">Link Match race: cross-shaped void, same board for both; path shown on match. Requires width ≥1024px.</div>
+            <div class="arcade-card-copy">Link same tiles across the shared board and clear the field before your opponent.</div>
+          </button>
+
+          <button id="arcade-open-quickboat" class="glass-panel arcade-card" type="button">
+            <div class="arcade-card-title"><i class="fa-solid fa-dice-five"></i> Quick Boat</div>
+            <div class="arcade-card-copy">Two-player Yacht duel. Roll, hold, and choose scoring slots to finish ahead.</div>
+          </button>
+
+          <button id="arcade-open-loveletter" class="glass-panel arcade-card" type="button">
+            <div class="arcade-card-title"><i class="fa-solid fa-envelope-open-text"></i> Love Letter</div>
+            <div class="arcade-card-copy">Two-player hidden-hand duel. Play card effects, read the opponent, and race to three tokens.</div>
           </button>
         </div>
       </div>
     `;
 
     const openSudokuBtn = document.getElementById('arcade-open-sudoku');
-    const openBtn = document.getElementById('arcade-open-pictionary');
+    const openPictionaryBtn = document.getElementById('arcade-open-pictionary');
     const openLinkMatchBtn = document.getElementById('arcade-open-linkmatch');
+    const openQuickBoatBtn = document.getElementById('arcade-open-quickboat');
+    const openLoveLetterBtn = document.getElementById('arcade-open-loveletter');
+
     if (openSudokuBtn) openSudokuBtn.addEventListener('click', openSudoku);
-    if (openBtn) openBtn.addEventListener('click', openPictionary);
+    if (openPictionaryBtn) openPictionaryBtn.addEventListener('click', openPictionary);
     if (openLinkMatchBtn) openLinkMatchBtn.addEventListener('click', openLinkMatch);
+    if (openQuickBoatBtn) openQuickBoatBtn.addEventListener('click', openQuickBoat);
+    if (openLoveLetterBtn) openLoveLetterBtn.addEventListener('click', openLoveLetter);
 }
 
 window.initArcadeGames = initArcadeGames;
