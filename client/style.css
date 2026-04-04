@@ -910,8 +910,19 @@ body.is-mobile-sheet-open .floating-family-link-btn {
 .pict-guess-btn {
     width: 44px;
     min-width: 44px;
+    height: 44px;
     padding: 0;
     border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.pict-guess-btn i {
+    font-size: 0.95rem;
+    line-height: 1;
+    display: block;
 }
 
 .game-modal {
