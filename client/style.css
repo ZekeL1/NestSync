@@ -610,7 +610,7 @@ body.is-mobile-sheet-open .floating-family-link-btn {
     line-height: 1.45;
 }
 
-/* Link Match (连连看) — desktop / tablet (min-width enforced in JS) */
+
 .linkmatch-meta {
     display: flex;
     flex-wrap: wrap;
